@@ -5,7 +5,7 @@ Author: Derek Santos
 
 #include "camera_feed.h"
 #include "errors.h"
-
+#include <vector>
 using namespace camera;
 
 Feed::Feed(std::string winName, int cameraNum)
@@ -14,10 +14,19 @@ Feed::Feed(std::string winName, int cameraNum)
     if (!camera.isOpened())
     {
         err::errorMesg("ERROR: Camera could not be opened...");
-
     }
 
     windowName = winName;
+
+	//MINTHRESH = 0;
+
+	//ABOVE WILL BE THE STARTING THRESH
+	//BELLOW MINTHRESH WILL BE WHAT I THINK IS A GOOD DEFAULT 
+	MINTHRESH = 135;
+
+	//DONT NEED TO CHANGE
+	MAXTHRESH = 255;
+
 }
 
 /* One window where you can switch feeds with number keys */
@@ -38,6 +47,8 @@ void Feed::switchCameraFeed(int keyPressed)
             _normalFeed    = false;
             _thresholdFeed = false;
 			_grayFeed = false;
+			_contourFeed = false;
+
 			break;
 
         case 110:
@@ -46,6 +57,8 @@ void Feed::switchCameraFeed(int keyPressed)
             _normalFeed    = true;
             _thresholdFeed = false;
 			_grayFeed = false;
+			_contourFeed = false;
+
 			break;
 
 		case 116:
@@ -54,6 +67,8 @@ void Feed::switchCameraFeed(int keyPressed)
 			_normalFeed = false;
 			_thresholdFeed = true;
 			_grayFeed = false;
+			_contourFeed = false;
+
 			break;
 
 		case 103:
@@ -62,7 +77,44 @@ void Feed::switchCameraFeed(int keyPressed)
 			_normalFeed = false;
 			_thresholdFeed = false;
 			_grayFeed = true;
+			_contourFeed = false;
+
 			break;
+
+		case 99:
+			//switch Camera to Threshold
+			_hsvFeed = false;
+			_normalFeed = false;
+			_thresholdFeed = false;
+			_grayFeed = true;
+			_contourFeed = true;
+			break;
+
+		/* The cases bellow is for testing of the thresholds for contours*/
+		case 120:
+			MINTHRESH += 5;
+			std::cout << "MIN-THRESH: " << MINTHRESH << std::endl;
+			std::cout << "MAX-THRESH: " << MAXTHRESH << std::endl;
+			break;
+
+		case 122:
+			MINTHRESH -= 5;
+			std::cout << "MIN-THRESH: " << MINTHRESH << std::endl;
+			std::cout << "MAX-THRESH: " << MAXTHRESH << std::endl;
+			break;
+
+		case 46:
+			MAXTHRESH += 5;
+			std::cout << "MIN-THRESH: " << MINTHRESH << std::endl;
+			std::cout << "MAX-THRESH: " << MAXTHRESH << std::endl;
+			break;
+
+		case 44:
+			MAXTHRESH -= 5;
+			std::cout << "MIN-THRESH: " << MINTHRESH << std::endl;
+			std::cout << "MAX-THRESH: " << MAXTHRESH << std::endl;
+			break;
+
     }
 }
 
@@ -81,10 +133,7 @@ Mat Feed::getFrame()
     // Returns Normal Frame if wanted
     if (_hsvFeed)
     {
-		/* Un-Comment If color is gray. */
-		//cvtColor(normalFrame, hsvFrame, CV_GRAY2BGR);
         Mat hsvFrame;
-
 		cvtColor(normalFrame, hsvFrame, CV_BGR2HSV);
 
         return hsvFrame;
@@ -93,34 +142,59 @@ Mat Feed::getFrame()
     // Returns Normal Frame if wanted
     if (_thresholdFeed)
     {
-		//cvtColor(normalFrame, hsvFrame, COLOR_RGB2HSV);
-		//cvtColor(normalFrame, hsvFrame, COLOR_BGR2HSV);
-		//cvtColor(normalFrame, hsvFrame, COLOR_RGB2HSV);
 		Mat thresh;
 		Mat changedIMG;
 
 		cv::cvtColor(normalFrame, changedIMG, CV_BGR2GRAY);
 
-		/* Documentation : */
-		/* http://docs.opencv.org/2.4/modules/imgproc/doc/miscellaneous_transformations.html?highlight=threshold */
-		/* I have just found out the 100, 255, THRESH_BINARY is perfect right now. */
-		/* Though you have to have a black and white background and black dots scatter around */
-		threshold(changedIMG, thresh, 100, 255, THRESH_BINARY);
+		threshold(changedIMG, thresh, MINTHRESH, MAXTHRESH, THRESH_BINARY_INV);
 
-		return changedIMG;
+		return thresh;
 
     }
+
+	if (_contourFeed)
+	{
+
+		/* THE PERFECT EXPLANATION OF THRESHOLDS */
+		/* http://docs.opencv.org/2.4/doc/tutorials/imgproc/threshold/threshold.html */
+		Mat thresh;
+		Mat changedIMG;
+
+		cv::cvtColor(normalFrame, changedIMG, CV_BGR2GRAY);
+
+		
+		//TODO: UNCOMMENT THIS FOR TESTING THRESHOLD
+		//threshold(changedIMG, thresh, MINTHRESH, MAXTHRESH, THRESH_BINARY_INV);
+		threshold(changedIMG, thresh, MINTHRESH, MAXTHRESH, THRESH_BINARY_INV);
+
+
+		std::vector< std::vector<Point> > contours;
+		std::vector<Vec4i> hierarchy;
+
+		cv::findContours(thresh, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, Point(0, 0));
+
+		// Making a new Frame called Drawing made out of the size of the threshold image
+		Mat drawing = Mat::zeros(thresh.size(), CV_8UC3);
+
+		//for every point in the contour of the vector, draw a red dot
+		for (int count = 0; count < contours.size(); ++count)
+		{
+			drawContours(drawing, contours, count, Scalar(255, 0, 0), 2, 8, hierarchy, 0, Point());
+
+		}
+
+
+
+		return drawing;
+
+	}
 
 	// Returns Normal Frame if wanted
 	if (_grayFeed)
 	{
-		//cvtColor(normalFrame, hsvFrame, COLOR_RGB2HSV);
-		//cvtColor(normalFrame, hsvFrame, COLOR_BGR2HSV);
-		//cvtColor(normalFrame, hsvFrame, COLOR_RGB2HSV);
 		Mat grayIMG;
-
 		cv::cvtColor(normalFrame, grayIMG, CV_BGR2GRAY);
-		//cv::cvtColor(grayIMG,     grayIMG, CV_GRAY2BGR);
 
 		return grayIMG;
 	}
@@ -159,5 +233,5 @@ void Feed::findContours()
     // A search of the input image for the all contours found
     Mat grayIMG;
     cv::cvtColor (normalFrame, grayIMG, CV_BGR2GRAY);
-    cv::findContours(grayIMG, );
+    //cv::findContours(grayIMG, );
 }

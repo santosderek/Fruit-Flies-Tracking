@@ -65,7 +65,13 @@ int main()
 			else
 			{
 				//Commented Line Bellow used to check key numbers
-				//std::cout << key << std::endl;
+				
+				/*if (key != 255 && key != -1)
+				{
+					std::cout << key << std::endl;
+
+				}*/
+				
 				camera_one.switchCameraFeed(key);
 			}
 		}

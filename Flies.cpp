@@ -1,6 +1,6 @@
 #include "Flies.h"
 
-using namespace Flies;
+using namespace track;
 
 Flies::Flies()
 {
