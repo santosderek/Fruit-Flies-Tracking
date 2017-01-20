@@ -11,7 +11,7 @@ Author: Derek Santos
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 #include <string>
-#include <vectors>
+#include <vector>
 
 using namespace cv;
 
@@ -41,7 +41,12 @@ namespace camera
         bool _hsvFeed;
 		bool _thresholdFeed;
 		bool _grayFeed;
+		bool _contourFeed;
 
+		//FIXME: Take this out later
+		int MAXTHRESH;
+		int MINTHRESH;
+		
         std::string windowName;
 
     public:
