@@ -1,10 +1,9 @@
 /*
 	Author: Derek Santos
 
-	Example of Motion Tracking
 
 	Explanation:
-		Draw dots on a notecard and the project will track it for you.
+		Detect flies and track. Explanation still in the works. 
 
 */
 
@@ -47,8 +46,6 @@ int main()
 			camera_one.showFrame();
 
 
-
-
 			/* waitKey(30) will display a frame for 30ms then be automatically closed. */
 			/* (If you put it in a loop to read videos, it will display the video frame-by-frame) */
 			/* 27 is the esc key */
@@ -60,13 +57,13 @@ int main()
 			else
 			{
 				//Commented Line Bellow used to check key numbers
-				
+
 				/*if (key != 255 && key != -1)
 				{
 					std::cout << key << std::endl;
 
 				}*/
-				
+
 				camera_one.switchCameraFeed(key);
 			}
 		}
@@ -78,6 +75,9 @@ int main()
 		}
 	}
 
+	/* This destroyAllWindows is ALWAYS needed here for when the program
+	closes. destroyAllWindows neatly cleans all background elements without
+	causing an error / leak. */
 	destroyAllWindows();
 	return 0;
 }

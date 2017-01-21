@@ -1,3 +1,12 @@
+/*
+Author: Derek Santos
+
+
+Explanation:
+	Detect flies and track. Explanation still in the works.
+
+*/
+
 #include "errors.h"
 
 /* Just a namespace of any errors that we might encounter */

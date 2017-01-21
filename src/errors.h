@@ -1,3 +1,12 @@
+/*
+Author: Derek Santos
+
+
+Explanation:
+Detect flies and track. Explanation still in the works.
+
+*/
+
 #ifndef ERRORS_H
 #define ERRORS_H
 

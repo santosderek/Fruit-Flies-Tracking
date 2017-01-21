@@ -1,5 +1,9 @@
 /*
-Author: Derek Santos
+	Author: Derek Santos
+
+
+	Explanation:
+		Detect flies and track. Explanation still in the works.
 
 */
 
@@ -23,16 +27,23 @@ namespace camera
     {
     private:
         void _createWindow();
-        void findContours();
 
         VideoCapture camera;
 
-        /* List of frames collected */
+        /* An always ready variable for the normal frame to be altered */
         Mat normalFrame;
-        //Mat hsvFrame;
-        //Mat thresholdFrame;
 
+        /* These are functions to deliever the desired altered frame */
+        /* After some thought, I decided to add an argument to each of the
+        bellow functions since it will give an extra layer of portability and
+        reuse if ever needed in another section of the program for future use.
+        (Instead of just calling 'normalFrame' directly.) */
 		Mat getFrame();
+        Mat getHSVFrame(Mat);
+        Mat getThresholdFrame(Mat);
+        Mat getContourFrame(Mat);
+        Mat getGrayFrame(Mat);
+
 
 
         /* if true, then getFrame() returns that Feed
@@ -43,17 +54,18 @@ namespace camera
 		bool _grayFeed;
 		bool _contourFeed;
 
-		//FIXME: Take this out later
+        /* These are the minimum and maximum threshold values that can
+        dinamically change */
 		int MAXTHRESH;
 		int MINTHRESH;
-		
+
+        /* Name of the window for the current class */
         std::string windowName;
+
 
     public:
         Feed(std::string, int);
 
-		// TODO : setCameraNumber isn't implemented... Check What You Can do later
-        void setCameraNumber(int);
         void switchCameraFeed(int keyPressed);
         void showFrame();
 
