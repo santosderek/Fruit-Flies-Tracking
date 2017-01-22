@@ -1,7 +1,7 @@
 # Resources While I learn
-## Use the Github Source Code!!!
-## Other's Don't Work Well... 
-## opencv = open source computer vision libary
+### Use the Github Source Code!!!
+### Other's Don't Work Well... 
+### opencv = open source computer vision libary
 
 
 
