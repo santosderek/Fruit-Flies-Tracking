@@ -11,10 +11,11 @@ Detect flies and track. Explanation still in the works.
 #include <math.h>
 //Fly Functions
 
-Fly::Fly(std::vector<cv::Point>passedContour, cv::Point2f passedCenter)
+Fly::Fly(std::vector<cv::Point>passedContour, cv::Point2f passedCenter, float passedRadius)
 {
 	contour = passedContour;
 	center  = passedCenter; 
+	radius  = passedRadius; 
 }
 
 void Fly::setContour(std::vector<cv::Point> passedContour)
@@ -32,6 +33,10 @@ std::vector <cv::Point> Fly::getContour()
 	return contour;
 }
 
+float Fly::getRadius()
+{
+	return radius;
+}
 
 
 
@@ -53,7 +58,10 @@ void Fly::setCenter(cv::Point2f passedCenter)
 	center = passedCenter;
 }
 
-
+void Fly::setRadius(float passedRadius)
+{
+	radius = passedRadius;
+}
 
 
 
@@ -97,6 +105,7 @@ void Swarm::replaceFly(int pos, Fly passedFly)
 {
 	flies[pos].setContour(passedFly.getContour());
 	flies[pos].setCenter(passedFly.getCenter());
+	flies[pos].setRadius(passedFly.getRadius());
 }
 
 double Swarm::getDistance(Fly originalFly, Fly passedFly)

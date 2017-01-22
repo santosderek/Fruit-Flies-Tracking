@@ -21,22 +21,23 @@ class Fly
 {
 private: 
 
-	// Find its position
-
-
-	std::vector <cv::Point> contour;
+	std::vector <cv::Point> contour; // list of points that make 1 contour of the said fly
 	cv::Point2f center; // The center of the detected fly
+	float radius; // Radius of the circle of the contour
 	
 
 public:
-	Fly(std::vector<cv::Point>, cv::Point2f); 
+	Fly(std::vector<cv::Point>, cv::Point2f, float); 
 
 	void setContour(std::vector<cv::Point>); 
 	void setCenter(cv::Point2f);
+	void setRadius(float);
+
 	double distanceApart(Fly);
 
 	std::vector <cv::Point> getContour();
 	cv::Point2f getCenter();
+	float getRadius();
 
 };
 

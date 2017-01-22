@@ -65,9 +65,14 @@ namespace camera
 		int maxThresh;
 		int minThresh;
 
+		int minRadius;
+		int maxRadius;
+
 		/* These values need to be static. If not then createTrackbar will break. Will give more info later. */
 		static void changeMinThreshold(int, void*);
 		static void changeMaxThreshold(int, void*);
+		static void changeMinRadius(int, void*);
+		static void changeMaxRadius(int, void*);
 
     public:
         Feed(std::string, int);

@@ -8,10 +8,9 @@
 #include "camera_feed.h"
 #include "errors.h"
 #include <vector>
+#include <string>
 #include "Flies.h"
 using namespace camera;
-
-
 
 Feed::Feed(std::string winName, int cameraNum)
 : camera(cameraNum)
@@ -23,33 +22,54 @@ Feed::Feed(std::string winName, int cameraNum)
 
     windowName = winName;
 
-    // Minimum value for the threshold frame.
+    // Minimum value and Maximum value for the threshold frame.
 	minThresh = 135;
-
-	// Maximum value for the threshold frame.
 	maxThresh = 255;
 
+	/*Setting the Normal Feed as Default*/
+    _normalFeed    = true;
     _hsvFeed       = false;
-    _normalFeed    = false;
     _thresholdFeed = false;
     _grayFeed      = false;
     _contourFeed   = false;
 
 
-    cv::namedWindow(windowName, WINDOW_AUTOSIZE);
-	createTrackbar("Minimum Threshold", windowName, &minThresh, 255, changeMinThreshold);
-	createTrackbar("Maximum Threshold", windowName, &maxThresh, 255, changeMaxThreshold);
+	minRadius = 7.0;
+	maxRadius = 70.0;
 
+    cv::namedWindow(windowName, CV_WINDOW_NORMAL);
 
+	resizeWindow(windowName, 800, 600);
+
+	createTrackbar("Min Threshold", windowName, &minThresh, 255, changeMinThreshold);
+	createTrackbar("Max Threshold", windowName, &maxThresh, 255, changeMaxThreshold);
+	createTrackbar("Min Radius", windowName, &minRadius, 255, changeMaxThreshold);
+	createTrackbar("Max Radius", windowName, &maxRadius, 255, changeMaxThreshold);
+
+	
 }
 
 void Feed::changeMinThreshold(int passedValue, void*)
 {
+	//Function that gets excecuted when using MinThreshold trackbar
 	//Feed::MINTHRESH = passedValue;
 }
 
 void Feed::changeMaxThreshold(int passedValue, void*)
 {
+	//Function that gets excecuted when using MaxThreshold trackbar
+	//Feed::MAXTHRESH = passedValue;
+}
+
+void Feed::changeMinRadius(int passedValue, void*)
+{
+	//Function that gets excecuted when using MinThreshold trackbar
+	//Feed::MINTHRESH = passedValue;
+}
+
+void Feed::changeMaxRadius(int passedValue, void*)
+{
+	//Function that gets excecuted when using MaxThreshold trackbar
 	//Feed::MAXTHRESH = passedValue;
 }
 
@@ -262,11 +282,11 @@ void Feed::evaluateContours(Swarm& swarm)
 	TODO:
 
 	Goal for bellow.
-	1. Put every contour in its own "Fly" class
-	2. Put every "Fly" in its own "TotalFlys" class
-	3. Within the "TotalFlys" class make it so that it does all the calculations for us
-	a. Total number of flys
-	b. give all the radius(s) for all the flys
+	1. Put every contour in its own "Fly" class - done - 
+	2. Put every "Fly" in its own "TotalFlys" class - done - 
+	3. Within the "TotalFlys" class make it so that it does all the calculations for us - kinda but still doing - 
+	a. Total number of flys - done - 
+	b. give all the radius(s) for all the flys - done - 
 	c. give information about that fly:
 	Time
 	Lifespan of said fly
@@ -281,25 +301,46 @@ void Feed::evaluateContours(Swarm& swarm)
 	*/
 
 
-	double minimumDistance = 1000.0; 
-	int closestFly = 0;
+	/* Fun Fact: Apparently initiallizing in a loop is actually fine. I thought it wasn't 
+	http://stackoverflow.com/questions/7959573/declaring-variables-inside-loops-good-practice-or-bad-practice-2-parter
+
+	... Compilers are smart ...
+	*/
 
 	for (int currentCount = 0; currentCount < contours.size(); currentCount++)
 	{
+		double minimumDistance = 1000.0;
+		int closestFlyPos = 0;
 		// TODO: Make min and max radius variables to later manipulate with sliders
-		if (poly_contour_radius[currentCount] > 5.0 && poly_contour_radius[currentCount] < 40.0)
+		if (poly_contour_radius[currentCount] > minRadius && poly_contour_radius[currentCount] < maxRadius)
 		{
-			closestFly = swarm.nearestFly(Fly(contours[currentCount], poly_contour_center[currentCount]));
-			if ( swarm.size() > 0 && swarm.getDistance(closestFly, Fly(contours[currentCount], poly_contour_center[currentCount])) < minimumDistance)
+			Fly tempFly(contours[currentCount], poly_contour_center[currentCount], poly_contour_radius[currentCount]);
+
+			closestFlyPos = swarm.nearestFly(tempFly);
+			if ( swarm.size() > 0 && swarm.getDistance(closestFlyPos, tempFly) < minimumDistance)
 			{
-				swarm.replaceFly(closestFly, Fly(contours[currentCount], poly_contour_center[currentCount]));
+				
+
+
+				/*Now it can track relatively well. I just need to tell it to compare to its last known 
+				possition (to the closest dot) for when it has been lost and picked back up. (probably add 
+				a timer to the last know position as well to time out if it hasnt been found in that region. 
+				*/
+
+
+				//putText(Frame, Text_to_Put (Fly's Position in Swarm), At center of the fly's circle, Font, Scale, Color, thickness, Linetype, Botomleft_is_orgin
+				putText(contourFrame, std::to_string(closestFlyPos), poly_contour_center[currentCount], FONT_HERSHEY_PLAIN, 1, Scalar(0, 255, 0), 1, 8, false);
+
+				swarm.replaceFly(closestFlyPos, tempFly);
 			}
 			else
 			{
-
-				swarm.addFly(Fly(contours[currentCount], poly_contour_center[currentCount]));
+				//putText(Frame, Text_to_Put (last Fly #), At center of the fly's circle, Font, Scale, Color, thickness, Linetype, Botomleft_is_orgin
+				putText(contourFrame, std::to_string(swarm.size()), poly_contour_center[currentCount], FONT_HERSHEY_PLAIN, 1, Scalar(0, 255, 0), 1, 8, false);
+				swarm.addFly(tempFly);
 			}
 			circle(contourFrame, poly_contour_center[currentCount], (int)poly_contour_radius[currentCount], Scalar(0, 255, 0), 2, 8, 0);
+			
 
 		}
 	}
