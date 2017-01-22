@@ -14,12 +14,14 @@
 #include <string.h>
 #include <iostream>
 #include "camera_feed.h"
+#include "Flies.h"
 
 using namespace cv;
 using namespace std;
 
 /* Camera '0' is the default   camera */
 /* Camera '1' is the secondary camera */
+/* Camera 'x' is etc...*/
 
 /* Maximum Tracking Objects */
 const int MAX_FLIES = 12;
@@ -27,11 +29,9 @@ const int MAX_FLIES = 12;
 int main()
 {
 
-	/* I believe we are tricking setMouseCallback into thinking that we are */
-	/* ...sending a Mouse object, where rectangleMovement is                */
-	//cv::setMouseCallback(videoFeedWindow, rectangleMovement, &normalFrame);
 
 	camera::Feed camera_one("Camera One", 0);
+	Swarm swarm;
 
 	int key = 0;
 
@@ -40,9 +40,6 @@ int main()
 		try
 		{
 
-			/* Convert normal frames, into the HSV Frame variable */
-			//cvtColor(normalFrame, hsvFrame, COLOR_BGR2HSV);
-			//cvtColor(tFrame, thsv, COLOR_BGR2HSV);
 			camera_one.showFrame();
 
 
@@ -58,12 +55,14 @@ int main()
 			{
 				//Commented Line Bellow used to check key numbers
 
-				/*if (key != 255 && key != -1)
+				/*
+				if (key != 255 && key != -1)
 				{
 					std::cout << key << std::endl;
 
-				}*/
-
+				}
+				*/
+				camera_one.evaluateContours(swarm);
 				camera_one.switchCameraFeed(key);
 			}
 		}

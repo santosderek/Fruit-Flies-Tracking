@@ -8,7 +8,10 @@
 #include "camera_feed.h"
 #include "errors.h"
 #include <vector>
+#include "Flies.h"
 using namespace camera;
+
+
 
 Feed::Feed(std::string winName, int cameraNum)
 : camera(cameraNum)
@@ -21,10 +24,10 @@ Feed::Feed(std::string winName, int cameraNum)
     windowName = winName;
 
     // Minimum value for the threshold frame.
-	MINTHRESH = 135;
+	minThresh = 135;
 
 	// Maximum value for the threshold frame.
-	MAXTHRESH = 255;
+	maxThresh = 255;
 
     _hsvFeed       = false;
     _normalFeed    = false;
@@ -32,12 +35,22 @@ Feed::Feed(std::string winName, int cameraNum)
     _grayFeed      = false;
     _contourFeed   = false;
 
+
+    cv::namedWindow(windowName, WINDOW_AUTOSIZE);
+	createTrackbar("Minimum Threshold", windowName, &minThresh, 255, changeMinThreshold);
+	createTrackbar("Maximum Threshold", windowName, &maxThresh, 255, changeMaxThreshold);
+
+
 }
 
-/* One window where you can switch feeds with number keys */
-void Feed::_createWindow()
+void Feed::changeMinThreshold(int passedValue, void*)
 {
-    cv::namedWindow(windowName, WINDOW_AUTOSIZE);
+	//Feed::MINTHRESH = passedValue;
+}
+
+void Feed::changeMaxThreshold(int passedValue, void*)
+{
+	//Feed::MAXTHRESH = passedValue;
 }
 
 void Feed::switchCameraFeed(int keyPressed)
@@ -102,37 +115,37 @@ void Feed::switchCameraFeed(int keyPressed)
 
 		/* The cases bellow is for testing of the thresholds for contours*/
 		case 120:
-			MINTHRESH += 5;
-			std::cout << "MIN-THRESH: " << MINTHRESH << std::endl;
-			std::cout << "MAX-THRESH: " << MAXTHRESH << std::endl;
+			minThresh += 5;
+			std::cout << "MIN-THRESH: " << minThresh << std::endl;
+			std::cout << "MAX-THRESH: " << maxThresh << std::endl;
 			std::cout << std::endl;
 			break;
 
 		case 122:
-			MINTHRESH -= 5;
-			std::cout << "MIN-THRESH: " << MINTHRESH << std::endl;
-			std::cout << "MAX-THRESH: " << MAXTHRESH << std::endl;
+			minThresh -= 5;
+			std::cout << "MIN-THRESH: " << minThresh << std::endl;
+			std::cout << "MAX-THRESH: " << maxThresh << std::endl;
 			std::cout << std::endl;
 			break;
 
 		case 46:
-			MAXTHRESH += 5;
-			std::cout << "MIN-THRESH: " << MINTHRESH << std::endl;
-			std::cout << "MAX-THRESH: " << MAXTHRESH << std::endl;
+			maxThresh += 5;
+			std::cout << "MIN-THRESH: " << minThresh << std::endl;
+			std::cout << "MAX-THRESH: " << maxThresh << std::endl;
 			std::cout << std::endl;
 			break;
 
 		case 44:
-			MAXTHRESH -= 5;
-			std::cout << "MIN-THRESH: " << MINTHRESH << std::endl;
-			std::cout << "MAX-THRESH: " << MAXTHRESH << std::endl;
+			maxThresh -= 5;
+			std::cout << "MIN-THRESH: " << minThresh << std::endl;
+			std::cout << "MAX-THRESH: " << maxThresh << std::endl;
 			std::cout << std::endl;
 			break;
 
     }
 }
 
-Mat Feed::getHSVFrame(Mat currentFrame)
+Mat Feed::getHSVFrame(Mat &currentFrame)
 {
     Mat hsvFrame;
     cvtColor(currentFrame, hsvFrame, CV_BGR2HSV);
@@ -140,12 +153,9 @@ Mat Feed::getHSVFrame(Mat currentFrame)
     return hsvFrame;
 }
 
-Mat Feed::getThresholdFrame(Mat currentFrame)
+Mat Feed::getThresholdFrame(Mat &currentFrame)
 {
     Mat thresh;
-    Mat changedIMG;
-
-    cv::cvtColor(currentFrame, changedIMG, CV_BGR2GRAY);
 
     /*
     Allows MINTHRESH, MAXTHRESH threshold values to be changed by keybinding.
@@ -153,12 +163,37 @@ Mat Feed::getThresholdFrame(Mat currentFrame)
         -> Does this by focusing on the minimum value than the Maximum.
     */
 
-    threshold(changedIMG, thresh, MINTHRESH, MAXTHRESH, THRESH_BINARY_INV);
+	// MinThresh will break program under these conditions
+	if (minThresh < 5 )
+	{
+		minThresh = 5; 
+	}
+
+	else if (minThresh > 255)
+	{
+		minThresh = 5;
+	}
+
+	// MaxThresh will break program under these conditions
+	if (maxThresh < 5)
+	{
+		maxThresh = 5;
+	}
+
+	else if (maxThresh > 255)
+	{
+		maxThresh = 255;
+	}
+
+
+	std::cout << "MINTHRESH: " << minThresh << std::endl;
+	std::cout << "MAXTHRESH: " << maxThresh << std::endl;
+    threshold(getGrayFrame(currentFrame), thresh, minThresh, maxThresh, THRESH_BINARY_INV);
 
     return thresh;
 }
 
-Mat Feed::getGrayFrame(Mat currentFrame)
+Mat Feed::getGrayFrame(Mat &currentFrame)
 {
     Mat changedIMG;
 
@@ -167,109 +202,108 @@ Mat Feed::getGrayFrame(Mat currentFrame)
     return changedIMG;
 }
 
-Mat Feed::getContourFrame(Mat currentFrame)
+Mat Feed::getContourFrame(Mat &currentFrame)
 {
-    /* THE PERFECT EXPLANATION OF THRESHOLDS */
-    /* http://docs.opencv.org/2.4/doc/tutorials/imgproc/threshold/threshold.html */
-    Mat thresh;
+    return contourFrame;
+}
 
-    thresh = getThresholdFrame(currentFrame);
+void Feed::evaluateContours(Swarm& swarm)
+{
 
-    /*
-    Creates a vector of another vector of points.
-    The higher vector called Contours consits of a collection of individual
-    contours.
-    */
-    std::vector< std::vector<Point> > contours;
-    std::vector<Vec4i> hierarchy;
+	Mat thresh;
 
-    cv::findContours(thresh, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, Point(0, 0));
+	thresh = getThresholdFrame(normalFrame);
 
-    // Making a new Frame called contourFrame made out of the size of the threshold image
-    Mat contourFrame = Mat::zeros(thresh.size(), CV_8UC3);
+	/*
+	Creates a vector of another vector of points.
+	The higher vector called Contours consits of a collection of individual
+	contours.
+	*/
+	std::vector< std::vector<Point> > contours;
+	std::vector<Vec4i> hierarchy;
 
-    //for every point in the contour of the vector, draw a red dot
-    for (int count = 0; count < contours.size(); ++count)
-    {
-        drawContours(contourFrame, contours, count, Scalar(255, 0, 0), 2, 8, hierarchy, 0, Point());
 
-    }
+	cv::findContours(thresh, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, Point(0, 0));
 
-    // TODO: http://docs.opencv.org/2.4/doc/tutorials/imgproc/shapedescriptors/bounding_rects_circles/bounding_rects_circles.html#bounding-rects-circles
+	// Making a new Frame called contourFrame made out of the size of the threshold image
+	contourFrame = Mat::zeros(thresh.size(), CV_8UC3);
 
-    // New Section of the program (experimental)
-    // Trying to differentiate each set of contours
+	//for every point in the contour of the vector, draw a red dot
+	for (int count = 0; count < contours.size(); ++count)
+	{
+		drawContours(contourFrame, contours, count, Scalar(255, 0, 0), 2, 8, hierarchy, 0, Point());
 
-    // Probably set a radius of the maximum a detected fly can be
+	}
 
-    //I need to comment what everything does.
-    // Add Some track bars
+	// TODO: http://docs.opencv.org/2.4/doc/tutorials/imgproc/shapedescriptors/bounding_rects_circles/bounding_rects_circles.html#bounding-rects-circles
+
+	// New Section of the program (experimental)
+	// Trying to differentiate each set of contours
+
+
 
 	std::vector< std::vector<Point> > tracked_contours;
 	std::vector< std::vector<Point> > contours_poly(contours.size());
-    std::vector<Point2f> poly_contour_center(contours.size());
-    std::vector<float>   poly_contour_radius(contours.size()); // could possibily use this later in the program to set a radius limit to not track bigger objects
+	std::vector<Point2f> poly_contour_center(contours.size());
+	std::vector<float>   poly_contour_radius(contours.size()); // could possibily use this later in the program to set a radius limit to not track bigger objects
 
 
-	// Obtaining information for the currently collected contours such as, minimum values for a circle
-    for (int currentCount = 0; currentCount < contours.size(); currentCount++)
-    {
-        approxPolyDP(Mat(contours[currentCount]), contours_poly[currentCount], 3, true);
-        minEnclosingCircle((Mat)contours_poly[currentCount], poly_contour_center[currentCount], poly_contour_radius[currentCount]);
-    }
+															   // Obtaining information for the currently collected contours such as, minimum values for a circle
+	for (int currentCount = 0; currentCount < contours.size(); currentCount++)
+	{
+		approxPolyDP(Mat(contours[currentCount]), contours_poly[currentCount], 3, true);
+		minEnclosingCircle((Mat)contours_poly[currentCount], poly_contour_center[currentCount], poly_contour_radius[currentCount]);
+	}
 
 
 
 
-	/* 
-	
-	
-	
-		TODO:
+	/*
 
-		Goal for bellow. 
-		1. Put every contour in its own "Fly" class 
-		2. Put every "Fly" in its own "TotalFlys" class
-		3. Within the "TotalFlys" class make it so that it does all the calculations for us
-			a. Total number of flys 
-			b. give all the radius(s) for all the flys
-			c. give information about that fly: 
-				Time
-				Lifespan of said fly
-				etc.
-			d. velocity, etc. 
-		4. create sliders for the min and max radius of a fly
-		5. Within the "TotalFly" class make it so that it knows when the fly is immobile
 
-	
-	
-	
+
+	TODO:
+
+	Goal for bellow.
+	1. Put every contour in its own "Fly" class
+	2. Put every "Fly" in its own "TotalFlys" class
+	3. Within the "TotalFlys" class make it so that it does all the calculations for us
+	a. Total number of flys
+	b. give all the radius(s) for all the flys
+	c. give information about that fly:
+	Time
+	Lifespan of said fly
+	etc.
+	d. velocity, etc.
+	4. create sliders for the min and max radius of a fly
+	5. Within the "TotalFly" class make it so that it knows when the fly is immobile
+
+
+
+
 	*/
 
-    for (int currentCount = 0; currentCount < contours.size(); currentCount++)
-    {
+
+
+
+	for (int currentCount = 0; currentCount < contours.size(); currentCount++)
+	{
 		// TODO: Make min and max radius variables to later manipulate with sliders
 		if (poly_contour_radius[currentCount] > 5.0 && poly_contour_radius[currentCount] < 40.0)
 		{
-			tracked_contours.push_back(contours_poly[currentCount]);
+			swarm.addFly(Fly(contours[currentCount]));
 			circle(contourFrame, poly_contour_center[currentCount], (int)poly_contour_radius[currentCount], Scalar(0, 255, 0), 2, 8, 0);
+
 		}
-    }
+	}
 
-	// The radius of just the first poly contour
-	std::cout << "Radius: " << poly_contour_radius[0] << std::endl;
-
-	// Total number of tracked objects
-    std::cout << "Maximum amount of flies in a swarm: " << tracked_contours.size() << std::endl;
-
-    return contourFrame;
+	std::cout << "# of SWARM: " << swarm.size() << std::endl;
 
 }
-
 Mat Feed::getFrame()
 {
 
-	// Camera will grab the picture as BGR
+	/* Note to developer: Camera will grab the picture as BGR */
     camera >> normalFrame;
 
     // Returns Normal Frame if wanted
