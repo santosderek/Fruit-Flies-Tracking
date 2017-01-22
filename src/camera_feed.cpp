@@ -281,7 +281,7 @@ void Feed::evaluateContours(Swarm& swarm)
 	*/
 
 
-	double minimumDistance = 0.0; 
+	double minimumDistance = 1000.0; 
 	int closestFly = 0;
 
 	for (int currentCount = 0; currentCount < contours.size(); currentCount++)
@@ -290,7 +290,7 @@ void Feed::evaluateContours(Swarm& swarm)
 		if (poly_contour_radius[currentCount] > 5.0 && poly_contour_radius[currentCount] < 40.0)
 		{
 			closestFly = swarm.nearestFly(Fly(contours[currentCount], poly_contour_center[currentCount]));
-			if ( swarm.size() > 0 && swarm.getDistance(closestFly, Fly(contours[currentCount], poly_contour_center[currentCount])) < 10)
+			if ( swarm.size() > 0 && swarm.getDistance(closestFly, Fly(contours[currentCount], poly_contour_center[currentCount])) < minimumDistance)
 			{
 				swarm.replaceFly(closestFly, Fly(contours[currentCount], poly_contour_center[currentCount]));
 			}
