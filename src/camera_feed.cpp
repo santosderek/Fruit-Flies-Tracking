@@ -185,9 +185,6 @@ Mat Feed::getThresholdFrame(Mat &currentFrame)
 		maxThresh = 255;
 	}
 
-
-	std::cout << "MINTHRESH: " << minThresh << std::endl;
-	std::cout << "MAXTHRESH: " << maxThresh << std::endl;
     threshold(getGrayFrame(currentFrame), thresh, minThresh, maxThresh, THRESH_BINARY_INV);
 
     return thresh;
@@ -284,22 +281,34 @@ void Feed::evaluateContours(Swarm& swarm)
 	*/
 
 
-
+	double minimumDistance = 0.0; 
+	int closestFly = 0;
 
 	for (int currentCount = 0; currentCount < contours.size(); currentCount++)
 	{
 		// TODO: Make min and max radius variables to later manipulate with sliders
 		if (poly_contour_radius[currentCount] > 5.0 && poly_contour_radius[currentCount] < 40.0)
 		{
-			swarm.addFly(Fly(contours[currentCount]));
+			closestFly = swarm.nearestFly(Fly(contours[currentCount], poly_contour_center[currentCount]));
+			if ( swarm.size() > 0 && swarm.getDistance(closestFly, Fly(contours[currentCount], poly_contour_center[currentCount])) < 10)
+			{
+				swarm.replaceFly(closestFly, Fly(contours[currentCount], poly_contour_center[currentCount]));
+			}
+			else
+			{
+
+				swarm.addFly(Fly(contours[currentCount], poly_contour_center[currentCount]));
+			}
 			circle(contourFrame, poly_contour_center[currentCount], (int)poly_contour_radius[currentCount], Scalar(0, 255, 0), 2, 8, 0);
 
 		}
 	}
+	
 
 	std::cout << "# of SWARM: " << swarm.size() << std::endl;
 
 }
+
 Mat Feed::getFrame()
 {
 

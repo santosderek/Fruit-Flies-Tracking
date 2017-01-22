@@ -25,12 +25,19 @@ private:
 
 
 	std::vector <cv::Point> contour;
+	cv::Point2f center; // The center of the detected fly
 	
 
 public:
-	Fly(std::vector<cv::Point>); 
+	Fly(std::vector<cv::Point>, cv::Point2f); 
 
 	void setContour(std::vector<cv::Point>); 
+	void setCenter(cv::Point2f);
+	double distanceApart(Fly);
+
+	std::vector <cv::Point> getContour();
+	cv::Point2f getCenter();
+
 };
 
 // Class for all the flies
@@ -43,6 +50,13 @@ public:
 	Swarm();
 
 	void addFly(Fly);
+	void replaceFly(int, Fly);
+	int nearestFly(Fly); // Returns the position of the nearest fly to the passed in Fly
+	
+	// Get Distance is overloaded for 2 flies, or the position of the fly in the vector with a new fly
+	double getDistance(Fly, Fly);
+	double getDistance(int, Fly);
+
 	int size();
 };
 
