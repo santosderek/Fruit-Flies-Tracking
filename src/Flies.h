@@ -16,6 +16,10 @@ Detect flies and track. Explanation still in the works.
 #include <vector>
 #include <string> 
 
+// When dealing with time
+// I will probably use Boost if i want to switch to datetime's
+#include <chrono>
+
 // Class for one fly
 class Fly
 {
@@ -24,7 +28,8 @@ private:
 	std::vector <cv::Point> contour; // list of points that make 1 contour of the said fly
 	cv::Point2f center; // The center of the detected fly
 	float radius; // Radius of the circle of the contour
-	
+
+	std::chrono::high_resolution_clock::time_point timeCreated = std::chrono::high_resolution_clock::now();
 
 public:
 	Fly(std::vector<cv::Point>, cv::Point2f, float); 
@@ -38,6 +43,8 @@ public:
 	std::vector <cv::Point> getContour();
 	cv::Point2f getCenter();
 	float getRadius();
+
+	int getLifeSpan(); 
 
 };
 

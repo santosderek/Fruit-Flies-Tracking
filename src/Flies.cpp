@@ -9,6 +9,91 @@ Detect flies and track. Explanation still in the works.
 
 #include "Flies.h"
 #include <math.h>
+
+/* TODO: CHANGE THIS
+
+
+BUT
+
+
+
+FOR NOW
+
+
+*/
+#include <chrono>
+
+/* We are going to use
+
+
+...
+
+
+http://en.cppreference.com/w/cpp/chrono/high_resolution_clock
+
+from <chrono>
+
+
+....
+
+
+if it becomes a problem later then
+
+
+use Boost's chrono module
+
+http://stackoverflow.com/questions/3220477/how-to-use-clock-in-c
+
+*/
+
+
+
+
+
+/*
+
+TODO: ANOTHER THING 
+
+
+I think we should use 
+
+bool state = true; 
+
+
+to show if a fly is active or inactive
+
+
+and if the fly is inactive 
+
+
+then we don't track the fly anymore 
+
+
+so when checking the distance from object to last known 
+
+position, it will look for the closest tracked fly, and the closest 
+
+active contour*/
+
+
+
+
+
+
+
+
+#include <iostream>
+
+
+using namespace std::chrono;
+
+
+
+
+
+
+
+
 //Fly Functions
 
 Fly::Fly(std::vector<cv::Point>passedContour, cv::Point2f passedCenter, float passedRadius)
@@ -38,7 +123,15 @@ float Fly::getRadius()
 	return radius;
 }
 
+int Fly::getLifeSpan()
+{
+	std::chrono::high_resolution_clock::time_point timeNow = std::chrono::high_resolution_clock::now();
+	
+	duration<double> time_span = duration_cast<duration<double>>(timeNow - this->timeCreated);
+	
+	return time_span.count();
 
+}
 
 
 
@@ -81,6 +174,8 @@ void Swarm::addFly(Fly passedFly)
 
 int Swarm::size()
 {
+	//delete this line
+
 	return flies.size();
 }
 

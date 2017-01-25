@@ -30,18 +30,18 @@ int main()
 {
 
 
-	camera::Feed camera_one("Camera One", 0);
+	camera::Feed camera_one("Camera One", 2);
 	Swarm swarm;
 
 	int key = 0;
-
 	while (true)
 	{
 		try
 		{
 
-			camera_one.showFrame();
+			
 
+			camera_one.showFrame();
 
 			/* waitKey(30) will display a frame for 30ms then be automatically closed. */
 			/* (If you put it in a loop to read videos, it will display the video frame-by-frame) */

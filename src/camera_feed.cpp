@@ -5,6 +5,11 @@
 		Detect flies and track. Explanation still in the works.
 */
 
+
+
+
+
+
 #include "camera_feed.h"
 #include "errors.h"
 #include <vector>
@@ -34,8 +39,10 @@ Feed::Feed(std::string winName, int cameraNum)
     _contourFeed   = false;
 
 
-	minRadius = 7.0;
+	minRadius = 48.0;
 	maxRadius = 70.0;
+
+
 
     cv::namedWindow(windowName, CV_WINDOW_NORMAL);
 
@@ -317,6 +324,22 @@ void Feed::evaluateContours(Swarm& swarm)
 			Fly tempFly(contours[currentCount], poly_contour_center[currentCount], poly_contour_radius[currentCount]);
 
 			closestFlyPos = swarm.nearestFly(tempFly);
+
+
+			/*
+			TODO: IMPORTANT 
+
+
+			PUT A bool isAlive = true; in fly class 
+
+			PROBABLY HERE check if fly has moved and if it has moved more than a set distance then keep alive;
+			if it hasn't moved more than a set distance then say that it's drunk;
+			if it hasn't moved a all (its still at pixel x,y) for more than a few seconds then delete the fly, but save the data; (I dont know what we would do with the data...)
+			
+			
+			*/
+
+
 			if ( swarm.size() > 0 && swarm.getDistance(closestFlyPos, tempFly) < minimumDistance)
 			{
 				
@@ -347,6 +370,7 @@ void Feed::evaluateContours(Swarm& swarm)
 	
 
 	std::cout << "# of SWARM: " << swarm.size() << std::endl;
+
 
 }
 
