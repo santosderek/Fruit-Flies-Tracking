@@ -101,6 +101,11 @@ Fly::Fly(std::vector<cv::Point>passedContour, cv::Point2f passedCenter, float pa
 	contour = passedContour;
 	center  = passedCenter; 
 	radius  = passedRadius; 
+	isAlive   = true; 
+
+	timeCreated = std::chrono::high_resolution_clock::now();
+	lastMoved = std::chrono::high_resolution_clock::now();
+
 }
 
 void Fly::setContour(std::vector<cv::Point> passedContour)
@@ -127,13 +132,24 @@ int Fly::getLifeSpan()
 {
 	std::chrono::high_resolution_clock::time_point timeNow = std::chrono::high_resolution_clock::now();
 	
-	duration<double> time_span = duration_cast<duration<double>>(timeNow - this->timeCreated);
+	duration<double> time_span = duration_cast<std::chrono::seconds>(timeNow - this->timeCreated);
 	
 	return time_span.count();
 
 }
 
+void Fly::changeState()
+{
+	if (isAlive)
+	{
+		isAlive = false; 
+	}
+}
 
+bool Fly::getState()
+{
+	return isAlive; 
+}
 
 
 
@@ -156,7 +172,17 @@ void Fly::setRadius(float passedRadius)
 	radius = passedRadius;
 }
 
+void Fly::flyMoved()
+{
+	lastMoved = std::chrono::high_resolution_clock::now();
+}
 
+int Fly::timeSinceMoved()
+{
+	std::chrono::high_resolution_clock::time_point timeNow = std::chrono::high_resolution_clock::now();
+	duration<double> time_span = duration_cast<duration<double>>(timeNow - lastMoved);
+	return time_span.count();
+}
 
 
 
@@ -174,7 +200,6 @@ void Swarm::addFly(Fly passedFly)
 
 int Swarm::size()
 {
-	//delete this line
 
 	return flies.size();
 }
@@ -201,6 +226,7 @@ void Swarm::replaceFly(int pos, Fly passedFly)
 	flies[pos].setContour(passedFly.getContour());
 	flies[pos].setCenter(passedFly.getCenter());
 	flies[pos].setRadius(passedFly.getRadius());
+	flies[pos].flyMoved();
 }
 
 double Swarm::getDistance(Fly originalFly, Fly passedFly)
@@ -211,4 +237,56 @@ double Swarm::getDistance(Fly originalFly, Fly passedFly)
 double Swarm::getDistance(int pos, Fly passedFly)
 {
 	return flies[pos].distanceApart(passedFly);
+}
+
+bool Swarm::checkState(int passedPos)
+{
+	return flies[passedPos].getState();
+}
+
+void Swarm::changeState(int passedPosition)
+{
+	flies[passedPosition].changeState(); 
+}
+
+int Swarm::getTime(int passedPosition)
+{
+	return flies[passedPosition].getLifeSpan();
+}
+
+void Swarm::giveTotalActive()
+{
+	int count = 0;
+	for (Fly& currentFly : flies)
+	{
+		if (currentFly.getState())
+		{
+			++count;
+		}
+	}
+	std::cout << "\nTotal Active Flies: " << count << std::endl << std::endl;
+
+}
+
+int Swarm::timeSinceMoved(int passedPos)
+{
+	return flies[passedPos].timeSinceMoved();
+}
+
+void Swarm::CheckActive()
+{
+
+	for (Fly& currentFly : flies)
+	{
+		if (currentFly.timeSinceMoved() > 5)
+		{
+			currentFly.changeState();
+		}
+	}
+	
+	/*if (swarm.timeSinceMoved(closestFlyPos) > 5)
+	{
+		std::cout << "\n\ntrue\n\n";
+		swarm.changeState(closestFlyPos);
+	}*/
 }

@@ -28,8 +28,11 @@ private:
 	std::vector <cv::Point> contour; // list of points that make 1 contour of the said fly
 	cv::Point2f center; // The center of the detected fly
 	float radius; // Radius of the circle of the contour
+	
+	bool isAlive;
 
-	std::chrono::high_resolution_clock::time_point timeCreated = std::chrono::high_resolution_clock::now();
+	std::chrono::high_resolution_clock::time_point timeCreated;
+	std::chrono::high_resolution_clock::time_point lastMoved;
 
 public:
 	Fly(std::vector<cv::Point>, cv::Point2f, float); 
@@ -44,7 +47,12 @@ public:
 	cv::Point2f getCenter();
 	float getRadius();
 
+	void changeState();
+	bool getState();
 	int getLifeSpan(); 
+
+	void flyMoved();
+	int timeSinceMoved();
 
 };
 
@@ -53,6 +61,7 @@ class Swarm
 {
 private: 
 	std::vector < Fly > flies; 
+	int minLifeInSeconds = 5;
 
 public:
 	Swarm();
@@ -65,7 +74,17 @@ public:
 	double getDistance(Fly, Fly);
 	double getDistance(int, Fly);
 
+	void changeState(int);
+	bool checkState(int); 
+
+	void giveTotalActive();
+
+	int timeSinceMoved(int);
+
+	int getTime(int);
 	int size();
+
+	void CheckActive();
 };
 
 #endif

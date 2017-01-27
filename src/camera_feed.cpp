@@ -39,21 +39,21 @@ Feed::Feed(std::string winName, int cameraNum)
     _contourFeed   = false;
 
 
-	minRadius = 48.0;
-	maxRadius = 70.0;
+	minRadius = 3;
+	maxRadius = 40;
 
 
 
     cv::namedWindow(windowName, CV_WINDOW_NORMAL);
 
-	resizeWindow(windowName, 800, 600);
+	resizeWindow(windowName, 800, 800);
 
 	createTrackbar("Min Threshold", windowName, &minThresh, 255, changeMinThreshold);
 	createTrackbar("Max Threshold", windowName, &maxThresh, 255, changeMaxThreshold);
-	createTrackbar("Min Radius", windowName, &minRadius, 255, changeMaxThreshold);
-	createTrackbar("Max Radius", windowName, &maxRadius, 255, changeMaxThreshold);
+	createTrackbar("Min Radius",    windowName, &minRadius, 255, changeMaxThreshold);
+	createTrackbar("Max Radius",    windowName, &maxRadius, 255, changeMaxThreshold);
 
-	
+
 }
 
 void Feed::changeMinThreshold(int passedValue, void*)
@@ -141,6 +141,7 @@ void Feed::switchCameraFeed(int keyPressed)
 			break;
 
 		/* The cases bellow is for testing of the thresholds for contours*/
+		/*
 		case 120:
 			minThresh += 5;
 			std::cout << "MIN-THRESH: " << minThresh << std::endl;
@@ -168,6 +169,7 @@ void Feed::switchCameraFeed(int keyPressed)
 			std::cout << "MAX-THRESH: " << maxThresh << std::endl;
 			std::cout << std::endl;
 			break;
+			*/
 
     }
 }
@@ -193,7 +195,7 @@ Mat Feed::getThresholdFrame(Mat &currentFrame)
 	// MinThresh will break program under these conditions
 	if (minThresh < 5 )
 	{
-		minThresh = 5; 
+		minThresh = 5;
 	}
 
 	else if (minThresh > 255)
@@ -233,6 +235,7 @@ Mat Feed::getContourFrame(Mat &currentFrame)
 
 void Feed::evaluateContours(Swarm& swarm)
 {
+	swarm.CheckActive();
 
 	Mat thresh;
 
@@ -259,11 +262,6 @@ void Feed::evaluateContours(Swarm& swarm)
 
 	}
 
-	// TODO: http://docs.opencv.org/2.4/doc/tutorials/imgproc/shapedescriptors/bounding_rects_circles/bounding_rects_circles.html#bounding-rects-circles
-
-	// New Section of the program (experimental)
-	// Trying to differentiate each set of contours
-
 
 
 	std::vector< std::vector<Point> > tracked_contours;
@@ -289,11 +287,11 @@ void Feed::evaluateContours(Swarm& swarm)
 	TODO:
 
 	Goal for bellow.
-	1. Put every contour in its own "Fly" class - done - 
-	2. Put every "Fly" in its own "TotalFlys" class - done - 
-	3. Within the "TotalFlys" class make it so that it does all the calculations for us - kinda but still doing - 
-	a. Total number of flys - done - 
-	b. give all the radius(s) for all the flys - done - 
+	1. Put every contour in its own "Fly" class - done -
+	2. Put every "Fly" in its own "TotalFlys" class - done -
+	3. Within the "TotalFlys" class make it so that it does all the calculations for us - kinda but still doing -
+	a. Total number of flys - done -
+	b. give all the radius(s) for all the flys - done -
 	c. give information about that fly:
 	Time
 	Lifespan of said fly
@@ -308,7 +306,7 @@ void Feed::evaluateContours(Swarm& swarm)
 	*/
 
 
-	/* Fun Fact: Apparently initiallizing in a loop is actually fine. I thought it wasn't 
+	/* Fun Fact: Apparently initiallizing in a loop is actually fine. I thought it wasn't
 	http://stackoverflow.com/questions/7959573/declaring-variables-inside-loops-good-practice-or-bad-practice-2-parter
 
 	... Compilers are smart ...
@@ -318,6 +316,12 @@ void Feed::evaluateContours(Swarm& swarm)
 	{
 		double minimumDistance = 1000.0;
 		int closestFlyPos = 0;
+
+
+
+		
+
+
 		// TODO: Make min and max radius variables to later manipulate with sliders
 		if (poly_contour_radius[currentCount] > minRadius && poly_contour_radius[currentCount] < maxRadius)
 		{
@@ -327,48 +331,55 @@ void Feed::evaluateContours(Swarm& swarm)
 
 
 			/*
-			TODO: IMPORTANT 
+			TODO: IMPORTANT
 
 
-			PUT A bool isAlive = true; in fly class 
+			PUT A bool isAlive = true; in fly class
 
 			PROBABLY HERE check if fly has moved and if it has moved more than a set distance then keep alive;
 			if it hasn't moved more than a set distance then say that it's drunk;
 			if it hasn't moved a all (its still at pixel x,y) for more than a few seconds then delete the fly, but save the data; (I dont know what we would do with the data...)
-			
-			
+
+
 			*/
 
+			
 
 			if ( swarm.size() > 0 && swarm.getDistance(closestFlyPos, tempFly) < minimumDistance)
 			{
+
 				
 
-
-				/*Now it can track relatively well. I just need to tell it to compare to its last known 
-				possition (to the closest dot) for when it has been lost and picked back up. (probably add 
-				a timer to the last know position as well to time out if it hasnt been found in that region. 
+				/*Now it can track relatively well. I just need to tell it to compare to its last known
+				possition (to the closest dot) for when it has been lost and picked back up. (probably add
+				a timer to the last know position as well to time out if it hasnt been found in that region.
 				*/
 
 
 				//putText(Frame, Text_to_Put (Fly's Position in Swarm), At center of the fly's circle, Font, Scale, Color, thickness, Linetype, Botomleft_is_orgin
-				putText(contourFrame, std::to_string(closestFlyPos), poly_contour_center[currentCount], FONT_HERSHEY_PLAIN, 1, Scalar(0, 255, 0), 1, 8, false);
+				if (swarm.checkState(closestFlyPos))
+				{
+					putText(contourFrame, std::to_string(closestFlyPos), poly_contour_center[currentCount], FONT_HERSHEY_PLAIN, 1, Scalar(0, 255, 0), 1, 8, false);
 
-				swarm.replaceFly(closestFlyPos, tempFly);
+					swarm.replaceFly(closestFlyPos, tempFly);
+				}
+				
 			}
 			else
 			{
 				//putText(Frame, Text_to_Put (last Fly #), At center of the fly's circle, Font, Scale, Color, thickness, Linetype, Botomleft_is_orgin
+			
 				putText(contourFrame, std::to_string(swarm.size()), poly_contour_center[currentCount], FONT_HERSHEY_PLAIN, 1, Scalar(0, 255, 0), 1, 8, false);
 				swarm.addFly(tempFly);
+
+				
 			}
 			circle(contourFrame, poly_contour_center[currentCount], (int)poly_contour_radius[currentCount], Scalar(0, 255, 0), 2, 8, 0);
-			
 
 		}
 	}
-	
 
+	swarm.giveTotalActive(); 
 	std::cout << "# of SWARM: " << swarm.size() << std::endl;
 
 

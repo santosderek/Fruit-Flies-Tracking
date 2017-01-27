@@ -29,8 +29,8 @@ const int MAX_FLIES = 12;
 int main()
 {
 
-
-	camera::Feed camera_one("Camera One", 2);
+	
+	camera::Feed camera_one("Camera", 0);
 	Swarm swarm;
 
 	int key = 0;
