@@ -5,11 +5,6 @@
 		Detect flies and track. Explanation still in the works.
 */
 
-
-
-
-
-
 #include "camera_feed.h"
 #include "errors.h"
 #include <vector>
@@ -140,37 +135,6 @@ void Feed::switchCameraFeed(int keyPressed)
 			_contourFeed   = true;
 			break;
 
-		/* The cases bellow is for testing of the thresholds for contours*/
-		/*
-		case 120:
-			minThresh += 5;
-			std::cout << "MIN-THRESH: " << minThresh << std::endl;
-			std::cout << "MAX-THRESH: " << maxThresh << std::endl;
-			std::cout << std::endl;
-			break;
-
-		case 122:
-			minThresh -= 5;
-			std::cout << "MIN-THRESH: " << minThresh << std::endl;
-			std::cout << "MAX-THRESH: " << maxThresh << std::endl;
-			std::cout << std::endl;
-			break;
-
-		case 46:
-			maxThresh += 5;
-			std::cout << "MIN-THRESH: " << minThresh << std::endl;
-			std::cout << "MAX-THRESH: " << maxThresh << std::endl;
-			std::cout << std::endl;
-			break;
-
-		case 44:
-			maxThresh -= 5;
-			std::cout << "MIN-THRESH: " << minThresh << std::endl;
-			std::cout << "MAX-THRESH: " << maxThresh << std::endl;
-			std::cout << std::endl;
-			break;
-			*/
-
     }
 }
 
@@ -262,49 +226,18 @@ void Feed::evaluateContours(Swarm& swarm)
 
 	}
 
-
-
 	std::vector< std::vector<Point> > tracked_contours;
 	std::vector< std::vector<Point> > contours_poly(contours.size());
 	std::vector<Point2f> poly_contour_center(contours.size());
-	std::vector<float>   poly_contour_radius(contours.size()); // could possibily use this later in the program to set a radius limit to not track bigger objects
+	std::vector<float>   poly_contour_radius(contours.size()); 
 
 
-															   // Obtaining information for the currently collected contours such as, minimum values for a circle
+	// Obtaining information for the currently collected contours such as, minimum values for a circle
 	for (int currentCount = 0; currentCount < contours.size(); currentCount++)
 	{
 		approxPolyDP(Mat(contours[currentCount]), contours_poly[currentCount], 3, true);
 		minEnclosingCircle((Mat)contours_poly[currentCount], poly_contour_center[currentCount], poly_contour_radius[currentCount]);
 	}
-
-
-
-
-	/*
-
-
-
-	TODO:
-
-	Goal for bellow.
-	1. Put every contour in its own "Fly" class - done -
-	2. Put every "Fly" in its own "TotalFlys" class - done -
-	3. Within the "TotalFlys" class make it so that it does all the calculations for us - kinda but still doing -
-	a. Total number of flys - done -
-	b. give all the radius(s) for all the flys - done -
-	c. give information about that fly:
-	Time
-	Lifespan of said fly
-	etc.
-	d. velocity, etc.
-	4. create sliders for the min and max radius of a fly
-	5. Within the "TotalFly" class make it so that it knows when the fly is immobile
-
-
-
-
-	*/
-
 
 	/* Fun Fact: Apparently initiallizing in a loop is actually fine. I thought it wasn't
 	http://stackoverflow.com/questions/7959573/declaring-variables-inside-loops-good-practice-or-bad-practice-2-parter
@@ -318,10 +251,6 @@ void Feed::evaluateContours(Swarm& swarm)
 		int closestFlyPos = 0;
 
 
-
-		
-
-
 		// TODO: Make min and max radius variables to later manipulate with sliders
 		if (poly_contour_radius[currentCount] > minRadius && poly_contour_radius[currentCount] < maxRadius)
 		{
@@ -329,59 +258,43 @@ void Feed::evaluateContours(Swarm& swarm)
 
 			closestFlyPos = swarm.nearestFly(tempFly);
 
-
-			/*
-			TODO: IMPORTANT
-
-
-			PUT A bool isAlive = true; in fly class
-
-			PROBABLY HERE check if fly has moved and if it has moved more than a set distance then keep alive;
-			if it hasn't moved more than a set distance then say that it's drunk;
-			if it hasn't moved a all (its still at pixel x,y) for more than a few seconds then delete the fly, but save the data; (I dont know what we would do with the data...)
-
-
-			*/
-
-			
-
 			if ( swarm.size() > 0 && swarm.getDistance(closestFlyPos, tempFly) < minimumDistance)
 			{
-
-				
 
 				/*Now it can track relatively well. I just need to tell it to compare to its last known
 				possition (to the closest dot) for when it has been lost and picked back up. (probably add
 				a timer to the last know position as well to time out if it hasnt been found in that region.
 				*/
 
-
-				//putText(Frame, Text_to_Put (Fly's Position in Swarm), At center of the fly's circle, Font, Scale, Color, thickness, Linetype, Botomleft_is_orgin
+				// If the state of the selected fly is true, then proceed
 				if (swarm.checkState(closestFlyPos))
 				{
+					//putText(Frame, Text_to_Put (Fly's Position in Swarm), At center of the fly's circle, Font, Scale, Color, thickness, Linetype, Botomleft_is_orgin
 					putText(contourFrame, std::to_string(closestFlyPos), poly_contour_center[currentCount], FONT_HERSHEY_PLAIN, 1, Scalar(0, 255, 0), 1, 8, false);
 
 					swarm.replaceFly(closestFlyPos, tempFly);
+					circle(contourFrame, poly_contour_center[currentCount], (int)poly_contour_radius[currentCount], Scalar(0, 255, 0), 2, 8, 0);
 				}
 				
 			}
 			else
 			{
 				//putText(Frame, Text_to_Put (last Fly #), At center of the fly's circle, Font, Scale, Color, thickness, Linetype, Botomleft_is_orgin
-			
-				putText(contourFrame, std::to_string(swarm.size()), poly_contour_center[currentCount], FONT_HERSHEY_PLAIN, 1, Scalar(0, 255, 0), 1, 8, false);
-				swarm.addFly(tempFly);
+				//std::cout << "\n\nTOTAL ACTIVE: " << swarm.getTotalActive() << std::endl << std::endl;
+				//std::cout << "\n\nMAX FLIES: " << swarm.getMaxFlies() << std::endl << std::endl;
 
-				
+				if (swarm.getTotalActive() < swarm.getMaxFlies())
+				{
+					putText(contourFrame, std::to_string(swarm.size()), poly_contour_center[currentCount], FONT_HERSHEY_PLAIN, 1, Scalar(0, 255, 0), 1, 8, false);
+					swarm.addFly(tempFly);
+					circle(contourFrame, poly_contour_center[currentCount], (int)poly_contour_radius[currentCount], Scalar(0, 255, 0), 2, 8, 0);
+				}	
 			}
-			circle(contourFrame, poly_contour_center[currentCount], (int)poly_contour_radius[currentCount], Scalar(0, 255, 0), 2, 8, 0);
-
 		}
 	}
 
-	swarm.giveTotalActive(); 
+	std::cout << "\nTotal Active Flies: " << swarm.getTotalActive() << std::endl << std::endl;
 	std::cout << "# of SWARM: " << swarm.size() << std::endl;
-
 
 }
 
@@ -390,8 +303,7 @@ Mat Feed::getFrame()
 
 	/* Note to developer: Camera will grab the picture as BGR */
     camera >> normalFrame;
-
-    // Returns Normal Frame if wanted
+    
     if (_normalFeed)
     {
         return normalFrame;
@@ -409,6 +321,7 @@ Mat Feed::getFrame()
         return getThresholdFrame(normalFrame);
     }
 
+	// Returns Contour Feed if wanted
 	else if (_contourFeed)
 	{
         return getContourFrame(normalFrame);
@@ -420,6 +333,7 @@ Mat Feed::getFrame()
 		return getGrayFrame(normalFrame);
 	}
 
+	// If nothing is returned then return the normal frame... (For no errors)
     else
     {
         return normalFrame;

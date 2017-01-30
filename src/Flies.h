@@ -61,30 +61,31 @@ class Swarm
 {
 private: 
 	std::vector < Fly > flies; 
-	int minLifeInSeconds = 5;
+	int minLifeInSeconds;
+	int maxFlies;
+
 
 public:
 	Swarm();
 
 	void addFly(Fly);
 	void replaceFly(int, Fly);
-	int nearestFly(Fly); // Returns the position of the nearest fly to the passed in Fly
+	void changeState(int);
+	void CheckActive();
 	
 	// Get Distance is overloaded for 2 flies, or the position of the fly in the vector with a new fly
 	double getDistance(Fly, Fly);
 	double getDistance(int, Fly);
 
-	void changeState(int);
 	bool checkState(int); 
-
-	void giveTotalActive();
-
+	
+	int nearestFly(Fly); // Returns the position of the nearest fly to the passed in Fly
+	int getTotalActive();
 	int timeSinceMoved(int);
-
+	int getMaxFlies();
 	int getTime(int);
 	int size();
 
-	void CheckActive();
 };
 
 #endif

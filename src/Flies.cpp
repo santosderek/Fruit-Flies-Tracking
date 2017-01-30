@@ -190,7 +190,8 @@ int Fly::timeSinceMoved()
 
 Swarm::Swarm()
 {
-	
+	minLifeInSeconds = 5;
+	maxFlies = 12; 
 }
 
 void Swarm::addFly(Fly passedFly)
@@ -254,7 +255,7 @@ int Swarm::getTime(int passedPosition)
 	return flies[passedPosition].getLifeSpan();
 }
 
-void Swarm::giveTotalActive()
+int Swarm::getTotalActive()
 {
 	int count = 0;
 	for (Fly& currentFly : flies)
@@ -264,8 +265,8 @@ void Swarm::giveTotalActive()
 			++count;
 		}
 	}
-	std::cout << "\nTotal Active Flies: " << count << std::endl << std::endl;
 
+	return count;
 }
 
 int Swarm::timeSinceMoved(int passedPos)
@@ -283,10 +284,9 @@ void Swarm::CheckActive()
 			currentFly.changeState();
 		}
 	}
-	
-	/*if (swarm.timeSinceMoved(closestFlyPos) > 5)
-	{
-		std::cout << "\n\ntrue\n\n";
-		swarm.changeState(closestFlyPos);
-	}*/
+}
+
+int Swarm::getMaxFlies()
+{
+	return maxFlies;
 }
