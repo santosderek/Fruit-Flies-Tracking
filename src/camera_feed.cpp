@@ -6,10 +6,6 @@
 */
 
 #include "camera_feed.h"
-#include "errors.h"
-#include <vector>
-#include <string>
-#include "Flies.h"
 using namespace camera;
 
 Feed::Feed(std::string winName, int cameraNum)
@@ -37,43 +33,31 @@ Feed::Feed(std::string winName, int cameraNum)
 	minRadius = 3;
 	maxRadius = 40;
 
+	minimumDistance = 100;
+	maxFlies = 12;
 
 
     cv::namedWindow(windowName, CV_WINDOW_NORMAL);
 
 	resizeWindow(windowName, 800, 800);
 
-	createTrackbar("Min Threshold", windowName, &minThresh, 255, changeMinThreshold);
-	createTrackbar("Max Threshold", windowName, &maxThresh, 255, changeMaxThreshold);
-	createTrackbar("Min Radius",    windowName, &minRadius, 255, changeMaxThreshold);
-	createTrackbar("Max Radius",    windowName, &maxRadius, 255, changeMaxThreshold);
+
+	createTrackbar("Min Threshold", windowName, &minThresh, 255, sliderFunction);
+	createTrackbar("Max Threshold", windowName, &maxThresh, 255, sliderFunction);
+	createTrackbar("Min Radius",    windowName, &minRadius, 255, sliderFunction);
+	createTrackbar("Max Radius",    windowName, &maxRadius, 255, sliderFunction);
+	createTrackbar("Min Distance",  windowName, &minimumDistance, 1000, sliderFunction);
+	createTrackbar("Max Flies",		windowName, &maxFlies, 255, sliderFunction);
+
 
 
 }
 
-void Feed::changeMinThreshold(int passedValue, void*)
+void Feed::sliderFunction(int passedValue, void*)
 {
-	//Function that gets excecuted when using MinThreshold trackbar
-	//Feed::MINTHRESH = passedValue;
+	//Function that gets excecuted when using a trackbar
 }
 
-void Feed::changeMaxThreshold(int passedValue, void*)
-{
-	//Function that gets excecuted when using MaxThreshold trackbar
-	//Feed::MAXTHRESH = passedValue;
-}
-
-void Feed::changeMinRadius(int passedValue, void*)
-{
-	//Function that gets excecuted when using MinThreshold trackbar
-	//Feed::MINTHRESH = passedValue;
-}
-
-void Feed::changeMaxRadius(int passedValue, void*)
-{
-	//Function that gets excecuted when using MaxThreshold trackbar
-	//Feed::MAXTHRESH = passedValue;
-}
 
 void Feed::switchCameraFeed(int keyPressed)
 {
@@ -247,7 +231,7 @@ void Feed::evaluateContours(Swarm& swarm)
 
 	for (int currentCount = 0; currentCount < contours.size(); currentCount++)
 	{
-		double minimumDistance = 1000.0;
+		// Need to tweek this value to find the best minDistance
 		int closestFlyPos = 0;
 
 
@@ -258,8 +242,9 @@ void Feed::evaluateContours(Swarm& swarm)
 
 			closestFlyPos = swarm.nearestFly(tempFly);
 
-			if ( swarm.size() > 0 && swarm.getDistance(closestFlyPos, tempFly) < minimumDistance)
+			if ( swarm.size() > 0 && swarm.getDistance(closestFlyPos, tempFly) <= minimumDistance)
 			{
+				//std::cout << "\n\nDIStaNCe apart: " << swarm.getDistance(closestFlyPos, tempFly) << std::endl << std::endl;
 
 				/*Now it can track relatively well. I just need to tell it to compare to its last known
 				possition (to the closest dot) for when it has been lost and picked back up. (probably add
@@ -269,10 +254,9 @@ void Feed::evaluateContours(Swarm& swarm)
 				// If the state of the selected fly is true, then proceed
 				if (swarm.checkState(closestFlyPos))
 				{
+					swarm.replaceFly(closestFlyPos, tempFly);
 					//putText(Frame, Text_to_Put (Fly's Position in Swarm), At center of the fly's circle, Font, Scale, Color, thickness, Linetype, Botomleft_is_orgin
 					putText(contourFrame, std::to_string(closestFlyPos), poly_contour_center[currentCount], FONT_HERSHEY_PLAIN, 1, Scalar(0, 255, 0), 1, 8, false);
-
-					swarm.replaceFly(closestFlyPos, tempFly);
 					circle(contourFrame, poly_contour_center[currentCount], (int)poly_contour_radius[currentCount], Scalar(0, 255, 0), 2, 8, 0);
 				}
 				
@@ -283,18 +267,24 @@ void Feed::evaluateContours(Swarm& swarm)
 				//std::cout << "\n\nTOTAL ACTIVE: " << swarm.getTotalActive() << std::endl << std::endl;
 				//std::cout << "\n\nMAX FLIES: " << swarm.getMaxFlies() << std::endl << std::endl;
 
-				if (swarm.getTotalActive() < swarm.getMaxFlies())
+				if (swarm.getTotalActive() < maxFlies)
 				{
-					putText(contourFrame, std::to_string(swarm.size()), poly_contour_center[currentCount], FONT_HERSHEY_PLAIN, 1, Scalar(0, 255, 0), 1, 8, false);
 					swarm.addFly(tempFly);
+					putText(contourFrame, std::to_string(swarm.size()), poly_contour_center[currentCount], FONT_HERSHEY_PLAIN, 1, Scalar(0, 255, 0), 1, 8, false);
 					circle(contourFrame, poly_contour_center[currentCount], (int)poly_contour_radius[currentCount], Scalar(0, 255, 0), 2, 8, 0);
 				}	
 			}
 		}
 	}
+	
+	std::string activeCount = "Total Active Flies: " + std::to_string(swarm.getTotalActive());
+	std::string swarmCount  = "Total Swarm Count:  " + std::to_string(swarm.size());
 
-	std::cout << "\nTotal Active Flies: " << swarm.getTotalActive() << std::endl << std::endl;
-	std::cout << "# of SWARM: " << swarm.size() << std::endl;
+	putText(contourFrame, activeCount, Point(2,10), FONT_HERSHEY_PLAIN, 1, Scalar(0, 255, 0), 1, 8, false);
+	putText(contourFrame, swarmCount, Point(2, 30), FONT_HERSHEY_PLAIN, 1, Scalar(0, 255, 0), 1, 8, false);
+
+	//std::cout << "Total Active: " << swarm.getTotalActive() << std::endl;
+	//std::cout << "# of SWARM: " << swarm.size() << std::endl;
 
 }
 

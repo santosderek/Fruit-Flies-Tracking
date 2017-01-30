@@ -7,6 +7,46 @@
 
 */
 
+
+/*
+	TODO: 
+
+	AN IDEA!
+
+	Make a separate screen when you click a key to then switch to for statistics instead of relying on 
+	the sliders. 
+
+	You could just list everything out. This way you dont have to worry about Qt. 
+
+	Unless you really need to.
+
+	Kind of like lines 280 - 284: 
+	
+	"
+	std::string activeCount = std::to_string(swarm.getTotalActive());
+	std::string swarmCount = std::to_string(swarm.size());
+
+	putText(contourFrame, activeCount, Point(2,10), FONT_HERSHEY_PLAIN, 1, Scalar(0, 255, 0), 1, 8, false);
+	putText(contourFrame, swarmCount, Point(2, 30), FONT_HERSHEY_PLAIN, 1, Scalar(0, 255, 0), 1, 8, false);
+
+	"
+
+
+
+*/
+
+
+
+
+
+
+
+
+
+
+
+
+
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
@@ -29,9 +69,9 @@ const int MAX_FLIES = 12;
 int main()
 {
 
-	
-	camera::Feed camera_one("Camera", 0);
-	Swarm swarm;
+	std::string cameraName = "Camera";
+	camera::Feed camera_one(cameraName, 2);
+	Swarm swarm(cameraName);
 
 	int key = 0;
 	while (true)

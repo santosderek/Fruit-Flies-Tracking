@@ -7,7 +7,6 @@
 
 */
 
-
 #ifndef CAMERA_FEED_H
 #define CAMERA_FEED_H
 
@@ -69,10 +68,11 @@ namespace camera
 		int maxRadius;
 
 		/* These values need to be static. If not then createTrackbar will break. Will give more info later. */
-		static void changeMinThreshold(int, void*);
-		static void changeMaxThreshold(int, void*);
-		static void changeMinRadius(int, void*);
-		static void changeMaxRadius(int, void*);
+		static void sliderFunction(int, void*);
+
+		int minimumDistance;
+		int maxFlies;
+
 
     public:
         Feed(std::string, int);
@@ -80,6 +80,7 @@ namespace camera
         void switchCameraFeed(int keyPressed);
         void showFrame();
 		void evaluateContours(Swarm&); 
+
 
     };
 

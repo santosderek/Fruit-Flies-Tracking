@@ -10,15 +10,16 @@ Detect flies and track. Explanation still in the works.
 #ifndef FLIES_H
 #define FLIES_H
 
+#include <iostream>
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 #include <vector>
 #include <string> 
-
-// When dealing with time
-// I will probably use Boost if i want to switch to datetime's
+#include "errors.h"
+#include <math.h>
 #include <chrono>
+
 
 // Class for one fly
 class Fly
@@ -62,11 +63,13 @@ class Swarm
 private: 
 	std::vector < Fly > flies; 
 	int minLifeInSeconds;
-	int maxFlies;
+
 
 
 public:
-	Swarm();
+	Swarm(std::string);
+
+	
 
 	void addFly(Fly);
 	void replaceFly(int, Fly);
@@ -82,9 +85,10 @@ public:
 	int nearestFly(Fly); // Returns the position of the nearest fly to the passed in Fly
 	int getTotalActive();
 	int timeSinceMoved(int);
-	int getMaxFlies();
 	int getTime(int);
 	int size();
+
+
 
 };
 

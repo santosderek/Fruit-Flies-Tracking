@@ -8,90 +8,10 @@ Detect flies and track. Explanation still in the works.
 */
 
 #include "Flies.h"
-#include <math.h>
 
-/* TODO: CHANGE THIS
-
-
-BUT
-
-
-
-FOR NOW
-
-
-*/
-#include <chrono>
-
-/* We are going to use
-
-
-...
-
-
-http://en.cppreference.com/w/cpp/chrono/high_resolution_clock
-
-from <chrono>
-
-
-....
-
-
-if it becomes a problem later then
-
-
-use Boost's chrono module
-
-http://stackoverflow.com/questions/3220477/how-to-use-clock-in-c
-
-*/
-
-
-
-
-
-/*
-
-TODO: ANOTHER THING 
-
-
-I think we should use 
-
-bool state = true; 
-
-
-to show if a fly is active or inactive
-
-
-and if the fly is inactive 
-
-
-then we don't track the fly anymore 
-
-
-so when checking the distance from object to last known 
-
-position, it will look for the closest tracked fly, and the closest 
-
-active contour*/
-
-
-
-
-
-
-
-
-#include <iostream>
 
 
 using namespace std::chrono;
-
-
-
-
-
-
 
 
 //Fly Functions
@@ -188,11 +108,18 @@ int Fly::timeSinceMoved()
 
 //Swarm Functions
 
-Swarm::Swarm()
+Swarm::Swarm(std::string windowName)
 {
-	minLifeInSeconds = 5;
-	maxFlies = 12; 
+	minLifeInSeconds = 10;
+
+
+
+
 }
+
+
+
+
 
 void Swarm::addFly(Fly passedFly)
 {
@@ -201,13 +128,12 @@ void Swarm::addFly(Fly passedFly)
 
 int Swarm::size()
 {
-
 	return flies.size();
 }
 
 int Swarm::nearestFly(Fly passedFly)
 {
-	double closestDistance = 1000000; // Starts at a rediculus number
+	double closestDistance = 70; // Starts at a rediculus number
 	int positionOfFly = 0; 
 
 	for (int currentFly = 0; currentFly < flies.size(); ++currentFly)
@@ -286,7 +212,3 @@ void Swarm::CheckActive()
 	}
 }
 
-int Swarm::getMaxFlies()
-{
-	return maxFlies;
-}
