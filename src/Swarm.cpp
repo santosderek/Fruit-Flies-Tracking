@@ -8,13 +8,7 @@ Swarm::Swarm()
 	minLifeInSeconds = 10;
 
 	flies.clear();
-
-
 }
-
-
-
-
 
 void Swarm::addFly(Fly passedFly)
 {
@@ -63,7 +57,7 @@ double Swarm::getDistance(int pos, Fly passedFly)
 	return flies[pos].distanceApart(passedFly);
 }
 
-bool Swarm::checkState(int passedPos)
+bool Swarm::getState(int passedPos)
 {
 	return flies[passedPos].getState();
 }
@@ -93,7 +87,7 @@ int Swarm::getTotalActiveCount()
 			++count;
 		}
 	}
-
+	
 	return count;
 }
 

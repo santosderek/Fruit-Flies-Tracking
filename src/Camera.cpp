@@ -31,13 +31,16 @@ Camera::Camera(int cameraNumber)
 // Yes I know that's what constructors are for...
 void Camera::restoreToDefault()
 {
-	minThresh = 56;
+	//Minimum and Maximum Threshold to filter different contours out
+	minThresh = 46;
 	maxThresh = 255;
 
-	minRadius = 3;
-	maxRadius = 40;
+	//Minimum and Maximum Radius' for the circle closing in.
+	minRadius = 1;
+	maxRadius = 90;
 
-	minDistance = 100;
+	// 60000 pixels will be the default
+	minDistance = 60000;
 	maxFlies = 12;
 	
 }
@@ -82,48 +85,17 @@ cv::Mat Camera::thresholdFrame()
 
 }
 
-cv::Mat Camera::contourFrame()
-{
-	// Frame
-	cv::Mat thresh; 
-	cv::Mat contourFrame; 
 
-	cv::threshold(grayscaleFrame(), thresh, minThresh, maxThresh, THRESH_BINARY_INV);
-
-	std::vector< std::vector<cv::Point> > contours;
-	std::vector<Vec4i> hierarchy;
-
-	cv::findContours(thresh, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, Point(0, 0));
-
-	// contourFrame = New Mat of threshold.size()
-	contourFrame = Mat::zeros(thresh.size(), CV_8UC3);
-
-	//for every point in the contour of the vector, draw a red dot
-	for (int count = 0; count < contours.size(); ++count)
-	{
-		cv::drawContours(contourFrame, contours, count, Scalar(128, 255, 0), 2, 8, hierarchy, 0, Point());
-
-	}
-
-	for (Fly tempFly : swarm.getTotalActiveFlies() )
-	{
-
-		circle(contourFrame, tempFly.getCenter(), (int)tempFly.getRadius(), Scalar(0, 255, 0), 2, 8, 0);
-		putText(contourFrame, std::to_string(tempFly.positionInSwarm), tempFly.getCenter(), FONT_HERSHEY_PLAIN, 1, Scalar(0, 255, 0), 1, 8, false);
-
-	}
-
-	return contourFrame;
-
-}
 
 void Camera::processContours()
 {
+	swarm.CheckActive();
 
 	cv::Mat thresh;
 
 	cv::threshold(grayscaleFrame(), thresh, minThresh, maxThresh, THRESH_BINARY_INV);
 
+	contourFrame = Mat::zeros(thresh.size(), CV_8UC3);
 
 	std::vector< std::vector<cv::Point> > contours;
 	std::vector<Vec4i> hierarchy;
@@ -142,12 +114,6 @@ void Camera::processContours()
 		minEnclosingCircle((Mat)contours_poly[currentCount], poly_contour_center[currentCount], poly_contour_radius[currentCount]);
 	}
 
-	/* Fun Fact: Apparently initiallizing in a loop is actually fine. I thought it wasn't
-	http://stackoverflow.com/questions/7959573/declaring-variables-inside-loops-good-practice-or-bad-practice-2-parter
-
-	... Compilers are smart ...
-	*/
-
 	for (int currentCount = 0; currentCount < contours.size(); currentCount++)
 	{
 		int closestFlyPos = 0;
@@ -163,7 +129,7 @@ void Camera::processContours()
 			{
 
 				// If the state of the selected fly is true, then proceed
-				if (swarm.checkState(closestFlyPos))
+				if (swarm.getState(closestFlyPos))
 				{
 					swarm.replaceFly(closestFlyPos, tempFly);
 				}
@@ -178,6 +144,22 @@ void Camera::processContours()
 				}
 			}
 		}
+	}
+
+	for (int count = 0; count < contours.size(); ++count)
+	{
+		cv::drawContours(contourFrame, contours, count, Scalar(128, 255, 0), 2, 8, hierarchy, 0, Point());
+
+	}
+	
+	std::cout << swarm.getTotalActiveCount() << std::endl;
+
+	for (Fly tempFly : swarm.getTotalActiveFlies())
+	{
+
+		circle(contourFrame, tempFly.getCenter(), (int)tempFly.getRadius(), Scalar(0, 255, 0), 2, 8, 0);
+		putText(contourFrame, std::to_string(tempFly.positionInSwarm), tempFly.getCenter(), FONT_HERSHEY_PLAIN, 1, Scalar(0, 255, 0), 1, 8, false);
+
 	}
 
 }
@@ -199,16 +181,13 @@ cv::Mat Camera::frame()
 
 	case CameraMode::HSV:
 		tempFrame = hsvFrame();
-		//cv::cvtColor(hsvFrame(), tempFrame, cv::COLOR_HSV2BGR);
-		//cv::cvtColor(tempFrame, tempFrame, cv::COLOR_BGR2RGBA);
+		cv::cvtColor(tempFrame, tempFrame, cv::COLOR_BGR2RGBA);
 		break;
 
 	case CameraMode::CONTOURS:
-		//cv::cvtColor(contourFrame(), tempFrame, cv::COLOR_GRAY2BGR565);
-		cv::cvtColor(contourFrame(), tempFrame, cv::COLOR_BGR2RGBA);
+		cv::cvtColor(contourFrame, tempFrame, cv::COLOR_BGR2RGBA);
 		break;
 	}
-	//cv::cvtColor(currentFrame, frameRGBA, cv::COLOR_BGR2RGBA);
 
 	// Needs to be sent out as a RGBA frame
 	return tempFrame;

@@ -39,11 +39,12 @@ private:
 
 	cv::VideoCapture captureDevice;
 	cv::Mat normalFrame;
+	cv::Mat contourFrame;
 
 	cv::Mat grayscaleFrame();
 	cv::Mat hsvFrame();
 	cv::Mat thresholdFrame();
-	cv::Mat contourFrame();
+
 
 
 	Swarm swarm;

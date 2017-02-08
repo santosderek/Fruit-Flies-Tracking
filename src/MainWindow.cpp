@@ -6,8 +6,9 @@ MainWindow::MainWindow() :
 	window(sf::VideoMode(1200, 800), "SFML TEST PROJECT", sf::Style::Default),
 	activeCamera()
 {
-	// Set Framerate to 240hz
-	window.setFramerateLimit(240);
+	// Set Framerate to 60 Frames Per Second
+	// If framerate is giving trouble, control the framerate yourself. 
+	window.setFramerateLimit(60);
 
 	// Load Font
 

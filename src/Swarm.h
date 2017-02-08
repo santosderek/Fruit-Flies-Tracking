@@ -29,7 +29,7 @@ public:
 	double getDistance(Fly, Fly);
 	double getDistance(int, Fly);
 
-	bool checkState(int);
+	bool getState(int);
 
 	int nearestFly(Fly); // Returns the position of the nearest fly to the passed in Fly
 	int getTotalActiveCount();
