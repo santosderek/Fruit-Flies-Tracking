@@ -19,11 +19,20 @@ MainWindow::MainWindow() :
 		exit(1);
 	}
 
+	// Command Loaded
 	commandLoaded.setFont(font);
 	commandLoaded.setCharacterSize(14);
 	commandLoaded.setFillColor(sf::Color::Green);
+	commandLoaded.setPosition(2.0f, 0.0f);
 
 
+	// Statistics of the Flies
+	statsOfFlies.setFont(font);
+	statsOfFlies.setCharacterSize(14);
+	statsOfFlies.setFillColor(sf::Color::Green);
+	statsOfFlies.setPosition(0.0f, 40.0f);
+
+	commandLoaded.setString("Normal Frame Set!");
 	activeCamera.openCamera(0);
 
 	windowSize.x = 1200; 
@@ -99,18 +108,14 @@ void MainWindow::processUserEvents(sf::Event event)
 void MainWindow::getFrame()
 {
 	cv::Mat frameRGBA;
-	//cv::Mat currentFrame = activeCamera.frame(); 
 	frameRGBA = activeCamera.frame();
 	
-	// CHANGE THIS TO currentFrame.empty IF IT DOESNT WORK
 	if (frameRGBA.empty())
 	{
 		std::cout << "WARNING! NO FRAME FOUND!" << std::endl; 
 		return;
 	}
 
-	//cv::cvtColor(currentFrame, frameRGBA, cv::COLOR_BGR2RGBA);
-	
 	finalFrame.create(frameRGBA.cols, frameRGBA.rows, frameRGBA.ptr());
 
 	if (!finalTexture.loadFromImage(finalFrame))
@@ -133,14 +138,15 @@ void MainWindow::display()
 	// TODO: Move getFrame() to a processing void
 	getFrame();
 	window.draw(finalSprite);
-
 	window.draw(commandLoaded);
+	window.draw(statsOfFlies);
 	window.display();
 }
 void MainWindow::processFrame()
 {
 	activeCamera.getFrame();
 	activeCamera.processContours();
+	statsOfFlies.setString(activeCamera.giveInformation());
 }
 
 void MainWindow::run()

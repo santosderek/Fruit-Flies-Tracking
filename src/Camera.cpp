@@ -1,15 +1,9 @@
 #include "Camera.h"
 
-// Probably Need To Put This Under A Namespace
-
-
-
 using namespace cv;
 
-
 Camera::Camera()
-	: captureDevice(),
-	swarm()
+	: captureDevice()
 {
 	restoreToDefault();
 }
@@ -27,8 +21,6 @@ Camera::Camera(int cameraNumber)
 	getFrame();
 }
 
-//Since we have many constructors ... I made this void to make sure everything is initized.
-// Yes I know that's what constructors are for...
 void Camera::restoreToDefault()
 {
 	//Minimum and Maximum Threshold to filter different contours out
@@ -39,9 +31,21 @@ void Camera::restoreToDefault()
 	minRadius = 1;
 	maxRadius = 90;
 
-	// 60000 pixels will be the default
-	minDistance = 60000;
-	maxFlies = 12;
+	currentMode = CameraMode::NORMAL; 
+
+	int leftBound = 0;
+	int rightBound = (480.f / 4.f);
+	int count = 0;
+
+	for (Vile& eachVile : activeViles)
+	{
+		//std::cout << "Vile " << ++count << ": Left Bound: " << leftBound << ", Right Bound: " << rightBound << std::endl;
+		
+		eachVile.setBounds(leftBound, rightBound);
+		leftBound += (480.f / 4.f);
+		rightBound += (480.f / 4.f);
+
+	}
 	
 }
 
@@ -64,7 +68,6 @@ cv::Mat Camera::grayscaleFrame()
 
 cv::Mat Camera::hsvFrame()
 {
-	// Frame
 	cv::Mat tempFrame; 
 	
 	cv::cvtColor(normalFrame, tempFrame, cv::COLOR_BGR2HSV);
@@ -74,22 +77,20 @@ cv::Mat Camera::hsvFrame()
 
 cv::Mat Camera::thresholdFrame()
 {
-	// Frame
 	cv::Mat thresh; 
-	
 
 	cv::threshold(grayscaleFrame(), thresh, minThresh, maxThresh, THRESH_BINARY_INV);
 
-	
 	return thresh;
 
 }
 
-
-
 void Camera::processContours()
 {
-	swarm.CheckActive();
+	for (Vile& eachVile : activeViles)
+	{
+		eachVile.checkActive();
+	}
 
 	cv::Mat thresh;
 
@@ -107,6 +108,8 @@ void Camera::processContours()
 	std::vector<Point2f> poly_contour_center(contours.size());
 	std::vector<float>   poly_contour_radius(contours.size());
 
+	
+
 	// Obtaining information for the currently collected contours such as, minimum values for a circle
 	for (int currentCount = 0; currentCount < contours.size(); currentCount++)
 	{
@@ -116,51 +119,79 @@ void Camera::processContours()
 
 	for (int currentCount = 0; currentCount < contours.size(); currentCount++)
 	{
-		int closestFlyPos = 0;
 
 
 		if (poly_contour_radius[currentCount] >= minRadius && poly_contour_radius[currentCount] <= maxRadius)
 		{
+
 			Fly tempFly(contours[currentCount], poly_contour_center[currentCount], poly_contour_radius[currentCount]);
-
-			closestFlyPos = swarm.nearestFly(tempFly);
-
-			if (swarm.size() > 0 && swarm.getDistance(closestFlyPos, tempFly) <= minDistance)
+			for (Vile& eachVile : activeViles)
 			{
 
-				// If the state of the selected fly is true, then proceed
-				if (swarm.getState(closestFlyPos))
+				if (eachVile.withinBounds(tempFly.getCenter().x))
 				{
-					swarm.replaceFly(closestFlyPos, tempFly);
-				}
-
-			}
-			else
-			{
-
-				if (swarm.getTotalActiveCount() < maxFlies)
-				{
-					swarm.addFly(tempFly);
+					eachVile.analyze(tempFly);
 				}
 			}
+			
 		}
 	}
-
+	
 	for (int count = 0; count < contours.size(); ++count)
 	{
 		cv::drawContours(contourFrame, contours, count, Scalar(128, 255, 0), 2, 8, hierarchy, 0, Point());
 
 	}
 	
-	std::cout << swarm.getTotalActiveCount() << std::endl;
-
-	for (Fly tempFly : swarm.getTotalActiveFlies())
+	for (Vile eachVile : activeViles)
 	{
+		for (Fly& eachFly : eachVile.activeFlies())
+		{
 
-		circle(contourFrame, tempFly.getCenter(), (int)tempFly.getRadius(), Scalar(0, 255, 0), 2, 8, 0);
-		putText(contourFrame, std::to_string(tempFly.positionInSwarm), tempFly.getCenter(), FONT_HERSHEY_PLAIN, 1, Scalar(0, 255, 0), 1, 8, false);
+			circle(contourFrame, eachFly.getCenter(), (int)eachFly.getRadius(), Scalar(0, 255, 0), 2, 8, 0);
+			putText(contourFrame, std::to_string(eachFly.positionInSwarm), eachFly.getCenter(), FONT_HERSHEY_PLAIN, 1, Scalar(0, 255, 0), 1, 8, false);
+
+		}
+	}
+	
+
+}
+
+std::string Camera::giveInformation()
+{
+	int totalActiveFlies = 0;
+
+	for (Vile& eachVile : activeViles)
+	{
+		totalActiveFlies += eachVile.activeFlyCount();
+		//std::cout << eachVile.activeFlyCount() << " ";
 
 	}
+	
+	int totalFlies = 0; 
+	int eachVileTotal[4] = {0,0,0,0};
+	int count = 0;
+
+	for (Vile& eachVile : activeViles)
+	{
+		
+		totalFlies += eachVile.getTotalFlyCount();
+		eachVileTotal[count] = eachVile.getTotalFlyCount();
+		//std::cout << eachVile.getTotalFlyCount() << " ";
+		count++;
+	}
+	//std::cout << std::endl; 
+
+	std::string information =
+		(std::string) "Total Active Flies: " + std::to_string(totalActiveFlies) + "\n" +
+		(std::string) "Total Number of Flies: " + std::to_string(totalFlies)    + "\n" +
+		(std::string) "Vile 1: " + std::to_string(eachVileTotal[0]) + "\n" +
+		(std::string) "Vile 2: " + std::to_string(eachVileTotal[1]) + "\n" +
+		(std::string) "Vile 3: " + std::to_string(eachVileTotal[2]) + "\n" +
+		(std::string) "Vile 4: " + std::to_string(eachVileTotal[3]);
+								
+
+	return information;
 
 }
 
@@ -171,10 +202,6 @@ cv::Mat Camera::frame()
 
 	switch (currentMode)
 	{
-	case CameraMode::NORMAL:
-		cv::cvtColor(normalFrame, tempFrame, cv::COLOR_BGR2RGBA);
-		break;
-
 	case CameraMode::GRAYSCALE:
 		cv::cvtColor(grayscaleFrame(), tempFrame, cv::COLOR_GRAY2RGBA);
 		break;
@@ -187,6 +214,11 @@ cv::Mat Camera::frame()
 	case CameraMode::CONTOURS:
 		cv::cvtColor(contourFrame, tempFrame, cv::COLOR_BGR2RGBA);
 		break;
+	
+	default:
+		cv::cvtColor(normalFrame, tempFrame, cv::COLOR_BGR2RGBA);
+		break;
+
 	}
 
 	// Needs to be sent out as a RGBA frame

@@ -8,6 +8,12 @@ Swarm::Swarm()
 	minLifeInSeconds = 10;
 
 	flies.clear();
+
+	maxFlies = 12;
+
+	// 60000 pixels will be the default
+	minDistance = 60000;
+
 }
 
 void Swarm::addFly(Fly passedFly)
@@ -122,4 +128,32 @@ void Swarm::CheckActive()
 			currentFly.changeState();
 		}
 	}
+}
+
+
+
+void Swarm::interpretFly(Fly passedFly)
+{
+	int closestFlyPos = nearestFly(passedFly); 
+
+
+	if (this->size() > 0 && getDistance(closestFlyPos, passedFly) <= minDistance)
+	{
+
+		// If the state of the selected fly is true, then proceed
+		if (getState(closestFlyPos))
+		{
+			replaceFly(closestFlyPos, passedFly);
+		}
+
+	}
+	else
+	{
+
+		if (getTotalActiveCount() < maxFlies)
+		{
+			addFly(passedFly);
+		}
+	}
+
 }

@@ -12,16 +12,16 @@ private:
 	sf::RenderWindow window;
 	sf::Vector2f windowSize;
 
-
 	sf::Font font;
 
 	sf::Text commandLoaded;
+	sf::Text statsOfFlies;
 
 	sf::Image finalFrame;
-
 	sf::Texture finalTexture;
-
 	sf::Sprite finalSprite; 
+
+
 	// Current Active Camera
 	Camera activeCamera;
 

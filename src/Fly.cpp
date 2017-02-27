@@ -73,14 +73,10 @@ bool Fly::getState()
 	return isAlive;
 }
 
-
-
-// TODO: CHECK IF THIS FUNCTION IS RIGHT.... IN ANOTHER TEST PROGRAM
 double Fly::distanceApart(Fly otherFly)
 {
 	cv::Point2f oFlyCenter = otherFly.getCenter();
 
-	// THE DISTANCE FORMULA ... TEST IF ITS RIGHT
 	return (pow(oFlyCenter.x - this->center.x, 2) + pow(oFlyCenter.y - this->center.y, 2));
 }
 

@@ -5,10 +5,10 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 #include <iostream>
-#include <string>
+#include <string.h>
 
 #include "Swarm.h"
-
+#include "Vile.h"
 enum CameraMode {
 	NORMAL,
 	HSV,
@@ -35,9 +35,12 @@ private:
 
 	int maxFlies; 
 
+	Vile activeViles[4]; 
+
 	CameraMode currentMode; 
 
 	cv::VideoCapture captureDevice;
+
 	cv::Mat normalFrame;
 	cv::Mat contourFrame;
 
@@ -46,18 +49,17 @@ private:
 	cv::Mat thresholdFrame();
 
 
-
-	Swarm swarm;
-
 public:
 	Camera();
 	Camera(int);
 	~Camera();
 
+	std::string giveInformation();
+
+	void setMode(CameraMode);
+	void processContours();
 	void openCamera(int); 
 	void getFrame();
-	void processContours();
-	void setMode(CameraMode);
 
 	cv::Mat frame(); 
 };
