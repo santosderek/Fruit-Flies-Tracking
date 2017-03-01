@@ -18,7 +18,7 @@ Camera::Camera(int cameraNumber)
 
 	restoreToDefault();
 
-	getFrame();
+	//getFrame();
 }
 
 void Camera::restoreToDefault()
@@ -29,24 +29,26 @@ void Camera::restoreToDefault()
 
 	//Minimum and Maximum Radius' for the circle closing in.
 	minRadius = 1;
-	maxRadius = 90;
+	maxRadius = 40;
 
-	currentMode = CameraMode::NORMAL; 
+	currentMode = CameraMode::NORMAL;
+
+	//float width captureDevice.get(CV_PROP_FRAME_WIDTH);
 
 	int leftBound = 0;
-	int rightBound = (480.f / 4.f);
+	int rightBound = (640.f / 4.f);
 	int count = 0;
 
 	for (Vile& eachVile : activeViles)
 	{
 		//std::cout << "Vile " << ++count << ": Left Bound: " << leftBound << ", Right Bound: " << rightBound << std::endl;
-		
+
 		eachVile.setBounds(leftBound, rightBound);
-		leftBound += (480.f / 4.f);
-		rightBound += (480.f / 4.f);
+		leftBound += (640.f / 4.f);
+		rightBound += (640.f / 4.f);
 
 	}
-	
+
 }
 
 Camera::~Camera()
@@ -61,15 +63,15 @@ void Camera::getFrame()
 
 cv::Mat Camera::grayscaleFrame()
 {
-	cv::Mat grayscale; 
+	cv::Mat grayscale;
 	cv::cvtColor(normalFrame, grayscale, cv::COLOR_BGR2GRAY);
-	return grayscale; 
+	return grayscale;
 }
 
 cv::Mat Camera::hsvFrame()
 {
-	cv::Mat tempFrame; 
-	
+	cv::Mat tempFrame;
+
 	cv::cvtColor(normalFrame, tempFrame, cv::COLOR_BGR2HSV);
 
 	return tempFrame;
@@ -77,7 +79,7 @@ cv::Mat Camera::hsvFrame()
 
 cv::Mat Camera::thresholdFrame()
 {
-	cv::Mat thresh; 
+	cv::Mat thresh;
 
 	cv::threshold(grayscaleFrame(), thresh, minThresh, maxThresh, THRESH_BINARY_INV);
 
@@ -85,8 +87,11 @@ cv::Mat Camera::thresholdFrame()
 
 }
 
+
 void Camera::processContours()
 {
+	getFrame();
+
 	for (Vile& eachVile : activeViles)
 	{
 		eachVile.checkActive();
@@ -108,7 +113,7 @@ void Camera::processContours()
 	std::vector<Point2f> poly_contour_center(contours.size());
 	std::vector<float>   poly_contour_radius(contours.size());
 
-	
+
 
 	// Obtaining information for the currently collected contours such as, minimum values for a circle
 	for (int currentCount = 0; currentCount < contours.size(); currentCount++)
@@ -133,27 +138,44 @@ void Camera::processContours()
 					eachVile.analyze(tempFly);
 				}
 			}
-			
+
 		}
 	}
-	
+
 	for (int count = 0; count < contours.size(); ++count)
 	{
 		cv::drawContours(contourFrame, contours, count, Scalar(128, 255, 0), 2, 8, hierarchy, 0, Point());
 
 	}
-	
-	for (Vile eachVile : activeViles)
+
+	int red = 0;
+	int green = 160;
+	int blue = 255;
+	int vileCount = 1;
+
+	for (Vile& eachVile : activeViles)
 	{
+		/*std::cout << "Vile " << vileCount << ": " << std::endl;
+		vileCount++;*/
 		for (Fly& eachFly : eachVile.activeFlies())
 		{
-
-			circle(contourFrame, eachFly.getCenter(), (int)eachFly.getRadius(), Scalar(0, 255, 0), 2, 8, 0);
-			putText(contourFrame, std::to_string(eachFly.positionInSwarm), eachFly.getCenter(), FONT_HERSHEY_PLAIN, 1, Scalar(0, 255, 0), 1, 8, false);
-
+			//std::cout << eachFly.positionInSwarm << ": " << eachFly.getCenter() << std::endl;
+			
+			circle(contourFrame, eachFly.getCenter(), (int)eachFly.getRadius(), Scalar(blue, green, red), 2, 8, 0);
+			putText(contourFrame, std::to_string(eachFly.positionInSwarm), eachFly.getCenter(), FONT_HERSHEY_PLAIN, 1, Scalar(blue, green, red), 1, 8, false);
 		}
+
+		int frameWidth = captureDevice.get(CAP_PROP_FRAME_WIDTH);
+
+		for (int position = 0; position <= frameWidth; position += frameWidth / 4)
+		{
+			rectangle(contourFrame, Rect(position, 0, 2, 480), Scalar(0, 0, 255), 1, 0);
+		}
+
+		red += 63;
+		blue -= 63;
 	}
-	
+
 
 }
 
@@ -167,20 +189,20 @@ std::string Camera::giveInformation()
 		//std::cout << eachVile.activeFlyCount() << " ";
 
 	}
-	
-	int totalFlies = 0; 
+
+	int totalFlies = 0;
 	int eachVileTotal[4] = {0,0,0,0};
 	int count = 0;
 
 	for (Vile& eachVile : activeViles)
 	{
-		
+
 		totalFlies += eachVile.getTotalFlyCount();
 		eachVileTotal[count] = eachVile.getTotalFlyCount();
 		//std::cout << eachVile.getTotalFlyCount() << " ";
 		count++;
 	}
-	//std::cout << std::endl; 
+	//std::cout << std::endl;
 
 	std::string information =
 		(std::string) "Total Active Flies: " + std::to_string(totalActiveFlies) + "\n" +
@@ -189,7 +211,7 @@ std::string Camera::giveInformation()
 		(std::string) "Vile 2: " + std::to_string(eachVileTotal[1]) + "\n" +
 		(std::string) "Vile 3: " + std::to_string(eachVileTotal[2]) + "\n" +
 		(std::string) "Vile 4: " + std::to_string(eachVileTotal[3]);
-								
+
 
 	return information;
 
@@ -198,7 +220,7 @@ std::string Camera::giveInformation()
 
 cv::Mat Camera::frame()
 {
-	cv::Mat tempFrame; 
+	cv::Mat tempFrame;
 
 	switch (currentMode)
 	{
@@ -214,7 +236,7 @@ cv::Mat Camera::frame()
 	case CameraMode::CONTOURS:
 		cv::cvtColor(contourFrame, tempFrame, cv::COLOR_BGR2RGBA);
 		break;
-	
+
 	default:
 		cv::cvtColor(normalFrame, tempFrame, cv::COLOR_BGR2RGBA);
 		break;

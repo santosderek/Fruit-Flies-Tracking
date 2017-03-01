@@ -35,7 +35,7 @@ private:
 
 
 public:
-	MainWindow();
+	MainWindow(sf::Vector2f);
 	~MainWindow();
 
 

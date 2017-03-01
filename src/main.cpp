@@ -6,7 +6,8 @@
 
 int main()
 {
-	MainWindow window; 
+	
+	MainWindow window(sf::Vector2f(1200.f,800.f)); 
 
 
 	window.run();

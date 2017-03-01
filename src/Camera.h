@@ -22,17 +22,14 @@ class Camera
 private: 
 
 	void restoreToDefault();
+	void getFrame();
 
 	int currentCameraNumber;
-
 	int minThresh;
 	int maxThresh;
-
 	int minRadius; 
 	int maxRadius; 
-
 	int minDistance;
-
 	int maxFlies; 
 
 	Vile activeViles[4]; 
@@ -43,11 +40,9 @@ private:
 
 	cv::Mat normalFrame;
 	cv::Mat contourFrame;
-
 	cv::Mat grayscaleFrame();
 	cv::Mat hsvFrame();
 	cv::Mat thresholdFrame();
-
 
 public:
 	Camera();
@@ -59,10 +54,12 @@ public:
 	void setMode(CameraMode);
 	void processContours();
 	void openCamera(int); 
-	void getFrame();
 
 	cv::Mat frame(); 
 };
+
+
+
 
 
 

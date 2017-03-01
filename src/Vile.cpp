@@ -31,7 +31,12 @@ void Vile::setBounds(float passedLeft, float passedRight)
 bool Vile::withinBounds(float passedPos)
 {
 	//std::cout << "Left Limit: " << leftLimit << ", passed: " << passedPos << ", rightLimit: " << rightLimit << std::endl;
-	return leftLimit <= passedPos && passedPos <= rightLimit ? true : false;
+	if (leftLimit <= passedPos && passedPos < rightLimit)
+	{
+		return true;
+	}
+
+	return false; 
 	
 }
 

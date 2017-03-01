@@ -2,12 +2,14 @@
 
 
 
-MainWindow::MainWindow() :
-	window(sf::VideoMode(1200, 800), "SFML TEST PROJECT", sf::Style::Default),
+MainWindow::MainWindow(sf::Vector2f passedSize) :
+	window(sf::VideoMode(passedSize.x, passedSize.y), "SFML TEST PROJECT", sf::Style::Default),
 	activeCamera()
 {
 	// Set Framerate to 60 Frames Per Second
 	// If framerate is giving trouble, control the framerate yourself. 
+	// TODO: Control Frame rate Myself
+	// I believe it's causing slow down
 	window.setFramerateLimit(60);
 
 	// Load Font
@@ -35,8 +37,7 @@ MainWindow::MainWindow() :
 	commandLoaded.setString("Normal Frame Set!");
 	activeCamera.openCamera(0);
 
-	windowSize.x = 1200; 
-	windowSize.y = 800;
+	windowSize = passedSize; 
 
 }
 
@@ -144,14 +145,14 @@ void MainWindow::display()
 }
 void MainWindow::processFrame()
 {
-	activeCamera.getFrame();
+	//activeCamera.getFrame();
 	activeCamera.processContours();
 	statsOfFlies.setString(activeCamera.giveInformation());
 }
 
 void MainWindow::run()
 {
-
+	
 	try
 	{
 

@@ -12,7 +12,7 @@ Swarm::Swarm()
 	maxFlies = 12;
 
 	// 60000 pixels will be the default
-	minDistance = 60000;
+	minDistance = 6000;
 
 }
 
@@ -30,18 +30,29 @@ int Swarm::size()
 
 int Swarm::nearestFly(Fly passedFly)
 {
-	double closestDistance = 70; // Starts at a rediculus number
+	// Default was 70
+	float closestDistance = minDistance; // Starts at a rediculus number
 	int positionOfFly = 0;
+
+	static float averageClosestDistance = 0; 
 
 	for (int currentFly = 0; currentFly < flies.size(); ++currentFly)
 	{
-		if (flies[currentFly].distanceApart(passedFly) < closestDistance)
+		if (flies[currentFly].distanceApart(passedFly) < closestDistance  && flies[currentFly].distanceApart(passedFly) < minDistance)
 		{
 			positionOfFly = currentFly;
 			closestDistance = flies[currentFly].distanceApart(passedFly);
 		}
+		/*else if (flies[currentFly].distanceApart(passedFly) < averageClosestDistance && averageClosestDistance != 0)
+		{
+			positionOfFly = currentFly;
+			closestDistance = flies[currentFly].distanceApart(passedFly);
+		}*/
 	}
 
+	/*averageClosestDistance += closestDistance;
+	averageClosestDistance /= 2;
+	std::cout << "Averaeg: " << averageClosestDistance << std::endl; */
 	return positionOfFly;
 }
 
