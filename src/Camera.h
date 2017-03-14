@@ -22,13 +22,12 @@ class Camera
 private: 
 
 	void restoreToDefault();
-	void getFrame();
 
 	int currentCameraNumber;
-	int minThresh;
-	int maxThresh;
-	int minRadius; 
-	int maxRadius; 
+	double minThresh;
+	double maxThresh;
+	double minRadius;
+	double maxRadius;
 	int minDistance;
 	int maxFlies; 
 
@@ -45,6 +44,8 @@ private:
 	cv::Mat thresholdFrame();
 
 public:
+	void getFrame();
+
 	Camera();
 	Camera(int);
 	~Camera();
@@ -54,6 +55,34 @@ public:
 	void setMode(CameraMode);
 	void processContours();
 	void openCamera(int); 
+
+	void minUp()
+	{
+		minThresh += 0.5; 
+		std::cout << "Minimum Threshold: " << minThresh << std::endl;
+	}
+
+	void minDown()
+	{
+		minThresh -= 0.5; 
+		std::cout << "Minimum Threshold: " << minThresh << std::endl;
+
+	}
+
+	void maxUp()
+	{
+		maxThresh += 0.5;
+		std::cout << "Maximum Threshold: " << maxThresh << std::endl;
+
+	}
+
+	void maxDown()
+	{
+		maxThresh -= 0.5;
+		std::cout << "Maximum Threshold: " << maxThresh << std::endl;
+
+
+	}
 
 	cv::Mat frame(); 
 };

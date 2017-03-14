@@ -24,12 +24,12 @@ Camera::Camera(int cameraNumber)
 void Camera::restoreToDefault()
 {
 	//Minimum and Maximum Threshold to filter different contours out
-	minThresh = 46;
-	maxThresh = 255;
+	minThresh = 70.0;
+	maxThresh = 255.0;
 
 	//Minimum and Maximum Radius' for the circle closing in.
 	minRadius = 1;
-	maxRadius = 40;
+	maxRadius = 70;
 
 	currentMode = CameraMode::NORMAL;
 
@@ -81,7 +81,7 @@ cv::Mat Camera::thresholdFrame()
 {
 	cv::Mat thresh;
 
-	cv::threshold(grayscaleFrame(), thresh, minThresh, maxThresh, THRESH_BINARY_INV);
+	cv::threshold(grayscaleFrame(), thresh, minThresh, maxThresh, THRESH_BINARY_INV); //TODO: THRESH_BINARY_INV
 
 	return thresh;
 
@@ -144,7 +144,8 @@ void Camera::processContours()
 
 	for (int count = 0; count < contours.size(); ++count)
 	{
-		cv::drawContours(contourFrame, contours, count, Scalar(128, 255, 0), 2, 8, hierarchy, 0, Point());
+		//cv::drawContours(contourFrame, contours, count, Scalar(128, 255, 0), 2, 8, hierarchy, 0, Point());
+		cv::drawContours(contourFrame, contours, count, Scalar(255, 255, 255), 2, 8, hierarchy, 0, Point());
 
 	}
 
@@ -160,7 +161,7 @@ void Camera::processContours()
 		for (Fly& eachFly : eachVile.activeFlies())
 		{
 			//std::cout << eachFly.positionInSwarm << ": " << eachFly.getCenter() << std::endl;
-			
+
 			circle(contourFrame, eachFly.getCenter(), (int)eachFly.getRadius(), Scalar(blue, green, red), 2, 8, 0);
 			putText(contourFrame, std::to_string(eachFly.positionInSwarm), eachFly.getCenter(), FONT_HERSHEY_PLAIN, 1, Scalar(blue, green, red), 1, 8, false);
 		}
@@ -185,13 +186,14 @@ std::string Camera::giveInformation()
 
 	for (Vile& eachVile : activeViles)
 	{
-		totalActiveFlies += eachVile.activeFlyCount();
+		totalActiveFlies += eachVile.getTotalActiveCount();
 		//std::cout << eachVile.activeFlyCount() << " ";
 
 	}
 
 	int totalFlies = 0;
 	int eachVileTotal[4] = {0,0,0,0};
+	int eachVileActiveFlies[4] = {0,0,0,0};
 	int count = 0;
 
 	for (Vile& eachVile : activeViles)
@@ -199,18 +201,17 @@ std::string Camera::giveInformation()
 
 		totalFlies += eachVile.getTotalFlyCount();
 		eachVileTotal[count] = eachVile.getTotalFlyCount();
-		//std::cout << eachVile.getTotalFlyCount() << " ";
+		eachVileActiveFlies[count] = eachVile.getTotalActiveCount();
 		count++;
 	}
-	//std::cout << std::endl;
 
 	std::string information =
 		(std::string) "Total Active Flies: " + std::to_string(totalActiveFlies) + "\n" +
 		(std::string) "Total Number of Flies: " + std::to_string(totalFlies)    + "\n" +
-		(std::string) "Vile 1: " + std::to_string(eachVileTotal[0]) + "\n" +
-		(std::string) "Vile 2: " + std::to_string(eachVileTotal[1]) + "\n" +
-		(std::string) "Vile 3: " + std::to_string(eachVileTotal[2]) + "\n" +
-		(std::string) "Vile 4: " + std::to_string(eachVileTotal[3]);
+		(std::string) "Vile 1: Total Flies: " + std::to_string(eachVileTotal[0]) + ", Total Active Flies: " + std::to_string(eachVileActiveFlies[0]) + "\n" +
+		(std::string) "Vile 2: Total Flies: " + std::to_string(eachVileTotal[1]) + ", Total Active Flies: " + std::to_string(eachVileActiveFlies[1]) + "\n" +
+		(std::string) "Vile 3: Total Flies: " + std::to_string(eachVileTotal[2]) + ", Total Active Flies: " + std::to_string(eachVileActiveFlies[2]) + "\n" +
+		(std::string) "Vile 4: Total Flies: " + std::to_string(eachVileTotal[3]) + ", Total Active Flies: " + std::to_string(eachVileActiveFlies[3]);
 
 
 	return information;
@@ -231,6 +232,11 @@ cv::Mat Camera::frame()
 	case CameraMode::HSV:
 		tempFrame = hsvFrame();
 		cv::cvtColor(tempFrame, tempFrame, cv::COLOR_BGR2RGBA);
+		break;
+
+	case CameraMode::THRESHOLD:
+		tempFrame = thresholdFrame();
+		cv::cvtColor(tempFrame, tempFrame, cv::COLOR_GRAY2RGBA);
 		break;
 
 	case CameraMode::CONTOURS:

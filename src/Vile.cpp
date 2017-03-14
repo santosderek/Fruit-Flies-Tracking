@@ -50,7 +50,7 @@ std::vector<Fly> Vile::activeFlies()
 	return swarm.getTotalActiveFlies();
 }
 
-int Vile::activeFlyCount()
+int Vile::getTotalActiveCount()
 {
 	return swarm.getTotalActiveCount();
 }
@@ -59,3 +59,4 @@ int Vile::getTotalFlyCount()
 {
 	return swarm.size();
 }
+

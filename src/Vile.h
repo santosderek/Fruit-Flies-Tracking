@@ -29,7 +29,7 @@ public:
 	void checkActive();
 
 	std::vector<Fly> activeFlies();
-	int activeFlyCount();
+	int getTotalActiveCount();
 	int getTotalFlyCount();
 
 

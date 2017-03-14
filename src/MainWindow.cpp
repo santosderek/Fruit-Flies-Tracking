@@ -10,7 +10,7 @@ MainWindow::MainWindow(sf::Vector2f passedSize) :
 	// If framerate is giving trouble, control the framerate yourself. 
 	// TODO: Control Frame rate Myself
 	// I believe it's causing slow down
-	window.setFramerateLimit(60);
+	//window.setFramerateLimit(30);
 
 	// Load Font
 
@@ -35,7 +35,7 @@ MainWindow::MainWindow(sf::Vector2f passedSize) :
 	statsOfFlies.setPosition(0.0f, 40.0f);
 
 	commandLoaded.setString("Normal Frame Set!");
-	activeCamera.openCamera(0);
+	activeCamera.openCamera(3);
 
 	windowSize = passedSize; 
 
@@ -78,6 +78,26 @@ void MainWindow::processUserEvents(sf::Event event)
 			activeCamera.setMode(CameraMode::GRAYSCALE);
 			commandLoaded.setString("GRAYSCALE Frame Set!");
 			break;
+
+
+
+		case (sf::Keyboard::Comma):
+			activeCamera.minUp();
+			break;
+
+		case (sf::Keyboard::Period):
+			activeCamera.minDown();
+			break;
+
+
+		case (sf::Keyboard::LBracket):
+			activeCamera.maxUp();
+			break; 
+		case (sf::Keyboard::RBracket): 
+			activeCamera.maxDown(); 
+			break;
+
+
 
 		// Open The Selected Camera
 		case( sf::Keyboard::Num1 ):
