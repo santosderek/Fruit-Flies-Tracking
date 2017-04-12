@@ -11,7 +11,7 @@ from threading import Thread
 SIZE_RATIO = 1
 
 """ Camera Settings """ 
-RESOLUTION = ( int(640 / 1), int (480 / 1) )
+RESOLUTION = ( int(640 * SIZE_RATIO), int (480 * SIZE_RATIO) )
 FRAMERATE = 60
 
 """ Debugging Settings """
