@@ -1,6 +1,6 @@
 # Python Modules
 import io
-import time
+from time import sleep, time
 
 # 3rd Party Modules
 import cv2
@@ -9,12 +9,8 @@ from picamera.array import PiRGBArray
 from picamera import PiCamera
 from threading import Thread
 
-#MIN_AREA = 720 / 2
-
-# This is the area for Minimum allowed contour
-# Once a "sweet spot" is found, just mutliply by a by a ratio to use for higher resolutions
-# Units are in Pixel for area of a contour
-MIN_AREA = 100
+# Dev developed modules
+from config import *
 
 class VideoStream:
     def __init__(self, resolution = (1280, 780), framerate = 30):
@@ -32,7 +28,7 @@ class VideoStream:
         self.is_closed = False
 
         # Time of last recorded image
-        self.time_since_last_update = time.time()
+        self.time_since_last_update = time()
         self.number_of_frames = 0
 
         # Stored Images
@@ -40,15 +36,30 @@ class VideoStream:
         self.current_frame = None
         self.threshold_image = None
 
-    def start_video_stream(self):
+        # Stored Contours
+        self.contours = None
+        self.hierarchy = None
+
+        # Stored Threads
+        self.contour_thread = None
+
+    def start_detection(self):
         # Creates a thread that consistantly grabs a frame from camera
-        thread = Thread(target = self.refresh_frame, args = ())
+        
 
         """ By setting daemon to True, the program will automatically close the
             thread when I exit the program
         """
-        thread.daemon = True
-        thread.start()
+        video_thread = Thread(target = self.refresh_frame, args = ())
+        video_thread.daemon = True
+        video_thread.start()
+
+        sleep(5)
+        
+        self.contour_thread = Thread( target = self.refresh_contours, args = ())
+        self.contour_thread.daemon = True
+        self.contour_thread.start()
+        
         return self
 
     def refresh_frame(self):
@@ -69,8 +80,11 @@ class VideoStream:
             else:
                 self.base_frame = self.current_frame.copy()
                 self.current_frame = frame.array
+                
             self.rawFrame.truncate(0)
 
+            
+            
             # When stream is closing, initiate cleansing
             if self.is_closed:
 
@@ -80,36 +94,40 @@ class VideoStream:
                 return
 
 
+    
+
+    def get_contours(self):
+        return self.contours
 
 
     # Returns an Absolute Value Frame
-    def get_contours(self):
-        current_gray = cv2.cvtColor (self.current_frame.copy(), cv2.COLOR_BGR2GRAY)
-        base_gray = cv2.cvtColor (self.base_frame.copy(), cv2.COLOR_BGR2GRAY)
+    def refresh_contours(self):
+        # While the VideoStream class is not closed 
+        while not self.is_closed:
+            try:
+                current_gray = cv2.cvtColor (self.current_frame.copy(), cv2.COLOR_BGR2GRAY)
+                base_gray = cv2.cvtColor (self.base_frame.copy(), cv2.COLOR_BGR2GRAY)
 
+                # NOTE: I might need to make base_gray and currentgray , base_gray.copy() and current_gray.copy()
+                abs_image = cv2.absdiff(base_gray, current_gray)
+                abs_image = cv2.blur (abs_image, (10, 10))
 
+                _, self.threshold_image = cv2.threshold (abs_image, MINIMUM_THRESHOLD, 255, cv2.THRESH_BINARY)
+                
+                self.threshold_image, self.contours, self.hierarchy = cv2.findContours(self.threshold_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-        # NOTE: I might need to make base_gray and currentgray , base_gray.copy() and current_gray.copy()
-        abs_image    = cv2.absdiff(base_gray, current_gray)
-        abs_image    = cv2.blur (abs_image, (10, 10))
-
-        _, self.threshold_image = cv2.threshold (abs_image, MINIMUM_THRESHOLD, 255, cv2.THRESH_BINARY)
-
-        self.threshold_image, contours, hierarchy = cv2.findContours(self.threshold_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
-        return contours
-
-
-
+                self.FramePerSecond()
+            except Exception as e:
+                print (e.what())
     # Returns ammount of frames occured every second
     def FramePerSecond(self):
 
-        time_elapsed = float ( time.time() - self.time_since_last_update )
+        time_elapsed = float ( time() - self.time_since_last_update )
 
         if time_elapsed >= 1:
             frames_per_second = float (self.number_of_frames / time_elapsed)
 
-            self.time_since_last_update = time.time()
+            self.time_since_last_update = time()
 
             print ('Frames Per Second: %d' % (frames_per_second))
 
