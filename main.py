@@ -1,61 +1,64 @@
 # Dev Defined Modules
-from config import DEBUG, SIZE_RATIO, RESOLUTION
+from config import * 
+from videostream import VideoStream
+
+# Python Modules
+from time import sleep
+
+# 3rd Party Modules
+import cv2
+
+STILL_TRACKING = True
 
 def main():
 
-    still_tracking = True
-
-    print('Setup...')
-
-    video = VideoStream(resolution = RESOLUTION, framerate = FRAMERATE).start_video_stream()
-    print('Starting video stream...')
-    # Let the video stream warm up
-    time.sleep(2)
-
+    global STILL_TRACKING
+    
+    print ('Starting video stream and contour motion detection...')
+    # Starting two individual threads: one for grabbing normal frames, and a second to detect contours 
+    video = VideoStream(resolution = RESOLUTION, framerate = FRAMERATE).start_detection()
+    
     print ('Tracking has started...')
 
-    while still_tracking:
+    while STILL_TRACKING:
 
         contours = video.get_contours()
 
-        biggest_area = MIN_AREA * SIZE_RATIO
-
+        # If there are no contours, skip the whole process
+        if contours == None or len(contours) == 0:
+            continue
+        
+        print (len(contours))
         motion_found = False
-
-        IMAGE = video.get_threshold_image()
-        cv2.drawContours(IMAGE, contours, 0, (0, 255, 0), 1)
-
-
-        for contour in contours:
-            found_area = cv2.contourArea(contour)
-
-            if found_area > biggest_area:
+        
+        # Allowed contours will be a list of position within the contours list that are considered 'worthy' to track
+        allowed_contours = []
+        
+        for pos, contour in enumerate(contours):
+            
+            if cv2.contourArea(contour) > MIN_AREA:
                 motion_found = True
+                allowed_contours.append(pos)
 
-
-        video.FramePerSecond()
-
-        if motion_found:
-            print ('Motion Found, Total Contours', len(contours))
-
-
+        # Allowed Contours will be drawn on top of the threshold image
+        contour_drawn_frame = video.get_threshold_image()
+        for position in allowed_contours:
+            # Remember that the frame is in Grayscale so the only colors displayed would be black or gray
+            contour_drawn_frame = cv2.drawContours(contour_drawn_frame, contours[position], -1, (128, 255, 0), 3)
 
         if DEBUG == True:
 
-            cv2.imshow('Image', IMAGE)
+            cv2.imshow('Image', contour_drawn_frame)
 
             # Clean up before program closes
             if cv2.waitKey(1) == ord('q'):
                 cv2.destroyAllWindows()
                 video.end_stream()
 
-                still_tracking = False
-
-
-
-
+                STILL_TRACKING = False
 
 if __name__ == '__main__':
+    
     try:
         main()
     finally:
