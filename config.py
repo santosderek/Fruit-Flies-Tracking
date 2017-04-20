@@ -1,5 +1,5 @@
 # Size Ratio: 1 Normal, 0 > Ratio > 1 to decrease size by that number; Ratio > 1 to increase size
-SIZE_RATIO = 1
+SIZE_RATIO = 1/2
 
 # Debugging Settings
 DEBUG = True
@@ -12,7 +12,12 @@ DEBUG = True
 RESOLUTION = ( int (640 * SIZE_RATIO), int (480 * SIZE_RATIO) )
 FRAMERATE = 60
 
-
 # Tracking Settings
 # NOTE: THRESHOLD helps sensetivity
 MINIMUM_THRESHOLD = 20
+
+# This is the area for Minimum allowed contour
+# Once a "sweet spot" is found, just mutliply by a by a ratio to use for higher resolutions
+# Units are in Pixel for area of a contour
+
+MIN_AREA = 100 * SIZE_RATIO
