@@ -83,8 +83,6 @@ class VideoStream:
                 
             self.rawFrame.truncate(0)
 
-            
-            
             # When stream is closing, initiate cleansing
             if self.is_closed:
 
@@ -102,6 +100,7 @@ class VideoStream:
 
     # Returns an Absolute Value Frame
     def refresh_contours(self):
+        
         # While the VideoStream class is not closed 
         while not self.is_closed:
             try:
@@ -116,11 +115,12 @@ class VideoStream:
                 
                 self.threshold_image, self.contours, self.hierarchy = cv2.findContours(self.threshold_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-                self.FramePerSecond()
+                self.FramesPerSecond()
+                
             except Exception as e:
                 print (e.what())
     # Returns ammount of frames occured every second
-    def FramePerSecond(self):
+    def FramesPerSecond(self):
 
         time_elapsed = float ( time() - self.time_since_last_update )
 
@@ -138,10 +138,10 @@ class VideoStream:
 
     # Grab the latest frame recieved
     def get_frame(self):
-        return self.current_frame
+        return self.current_frame.copy()
 
     def get_threshold_image(self):
-        return self.threshold_image
+        return self.threshold_image.copy()
 
     # Closes the stream cleanly
     def end_stream(self):
