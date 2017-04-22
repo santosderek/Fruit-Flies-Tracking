@@ -91,9 +91,6 @@ class VideoStream:
                 self.camera.close()
                 return
 
-
-    
-
     def get_contours(self):
         return self.contours
 
@@ -129,7 +126,9 @@ class VideoStream:
 
             self.time_since_last_update = time()
 
-            print ('Frames Per Second: %d' % (frames_per_second))
+            if DEBUG:
+                print ('Frames Per Second: %d' % (frames_per_second))
+                
 
             self.number_of_frames = 0
 
