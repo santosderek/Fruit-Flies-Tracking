@@ -30,6 +30,7 @@ def main():
 
     # Time since there was detection, declaration
     time_of_last_motion = None
+    print_time_delay = time()
     
     print ('Tracking has started...')
     
@@ -40,8 +41,12 @@ def main():
         # Contours will be drawn on top of contour_drawn_frame
         contour_drawn_frame = video.get_frame()
 
-        if time_of_last_motion != None:
+        # When time_of_last_motion has been updated, and print_time_delay has been delayed for more than a second
+        if time_of_last_motion != None and time() - print_time_delay >= 1:
             print ('Time duration since last update:', int (time() - time_of_last_motion))
+
+            # When print time delay is greater than a second, reset it
+            print_time_delay = time()
 
         # If there are no contours, skip the whole process
         if contours == None or len(contours) == 0:
