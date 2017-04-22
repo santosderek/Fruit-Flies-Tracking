@@ -3,7 +3,7 @@ from config import *
 from videostream import VideoStream
 
 # Python Modules
-from time import sleep
+from time import sleep, time
 
 # 3rd Party Modules
 import cv2
@@ -27,15 +27,21 @@ def main():
     print ('Starting video stream and contour motion detection...')
     # Starting two individual threads: one for grabbing normal frames, and a second to detect contours 
     video = VideoStream(resolution = RESOLUTION, framerate = FRAMERATE).start_detection()
+
+    # Time since there was detection, declaration
+    time_of_last_motion = None
     
     print ('Tracking has started...')
     
     while STILL_TRACKING:
         
         contours = video.get_contours()
-        # Allowed Contours will be drawn on top of the threshold image
-        #contour_drawn_frame = video.get_threshold_image()
+
+        # Contours will be drawn on top of contour_drawn_frame
         contour_drawn_frame = video.get_frame()
+
+        if time_of_last_motion != None:
+            print ('Time duration since last update:', int (time() - time_of_last_motion))
 
         # If there are no contours, skip the whole process
         if contours == None or len(contours) == 0:
@@ -57,7 +63,10 @@ def main():
             if cv2.contourArea(contour) > MIN_AREA:
                 motion_found = True
                 allowed_contours.append(pos)
-
+                
+        if motion_found:
+            time_of_last_motion = time()
+            
         for position in allowed_contours:
             # Remember that the frame is in Grayscale so the only colors displayed would be black or gray
             contour_drawn_frame = cv2.drawContours(contour_drawn_frame, contours[position], -1, (128, 255, 0), 3)
