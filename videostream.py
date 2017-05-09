@@ -1,3 +1,5 @@
+# Created and Edited by Derek Santos
+
 # Python Modules
 import io
 from time import sleep, time
