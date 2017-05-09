@@ -1,3 +1,5 @@
+# Created and Edited by Derek Santos
+
 # Size Ratio: 1 Normal, 0 > Ratio > 1 to decrease size by that number; Ratio > 1 to increase size
 SIZE_RATIO = 1/2
 
