@@ -1,3 +1,5 @@
+# Created and Edited by Derek Santos
+
 # Dev Defined Modules
 from config import * 
 from videostream import VideoStream
