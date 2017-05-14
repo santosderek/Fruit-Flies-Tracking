@@ -1,5 +1,5 @@
 # This file is created by: Ryan Reed
-# Formatted by: Derek Santos
+# Formatted by and edited by: Derek Santos
 
 from Adafruit_MotorHAT import Adafruit_MotorHAT, Adafruit_DCMotor, Adafruit_StepperMotor
 import atexit
