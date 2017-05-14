@@ -203,26 +203,26 @@ class FlyContourTracker:
         while not self.closed:
             try:
 
-                if self.contours == None or len(self.contours) == 0:
-                    continue
+                if self.contours != None and len(self.contours) != 0:
 
-                # Initialize variables
-                #total_allowed_contours = 0
 
-                #print(len(self.contours))
-                if len(self.contours) != 0 and self.contours != None:
-                    for contour in self.contours:
-                        if cv2.contourArea(contour) <= config.MIN_AREA:
-                            continue
+                    # Initialize variables
+                    #total_allowed_contours = 0
 
-                        x, y, w, h = cv2.boundingRect(contour)
+                    #print(len(self.contours))
+                    if len(self.contours) != 0 and self.contours != None:
+                        for contour in self.contours:
+                            if cv2.contourArea(contour) <= config.MIN_AREA:
+                                continue
 
-                        if leftbounds < x and x < rightbounds:
-                            #total_allowed_contours += 1
-                            time_at_last_update = time()
-                            if config.DEBUG or config.STATE_MOTION_FOUND_INDEPENDENTLY:
-                                print ('MOTION FOUND', time())
-                                
+                            x, y, w, h = cv2.boundingRect(contour)
+
+                            if leftbounds < x and x < rightbounds:
+                                #total_allowed_contours += 1
+                                time_at_last_update = time()
+                                if config.DEBUG or config.STATE_MOTION_FOUND_INDEPENDENTLY:
+                                    print ('MOTION FOUND', time())
+
 
                 # Calculating duration since last update
                 duration_since_last_update = time() - time_at_last_update
@@ -234,7 +234,6 @@ class FlyContourTracker:
 
                     # Step function automatically disables the tracking
                     step_motor.step()
-
 
                 #print('It has been {} seconds'.format(duration_since_last_update))
 
