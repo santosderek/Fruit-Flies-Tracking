@@ -9,7 +9,7 @@ class Motor:
         def __init__(self):
                 self.hat = Adafruit_MotorHAT(addr = 0x60)
                 self.stepper = self.hat.getStepper(1000,1)
-                self.stepper.setSpeed(1000)
+                self.stepper.setSpeed(10000)
 
         def release_motors(self):
                 self.hat.getMotor(1).run(Adafruit_MotorHAT.RELEASE)
