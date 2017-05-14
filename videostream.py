@@ -14,7 +14,7 @@ class FlyContourTracker:
         # Camera Setup
         self.camera = PiCamera()
         self.camera.resolution = self.resolution
-        self.camera.framerate = 15
+        self.camera.framerate = 20
         self.camera.hflip = False
         self.camera.vflip = False
 
@@ -89,9 +89,11 @@ class FlyContourTracker:
             if config.DEBUG or config.SHOW_FPS_INDEPENDENTLY:
                 if time() - normal_delay >= 1:
                     normal_delay = time()
+                    print('Normal FPS:', self.normal_fps)
                     self.normal_fps = 0
                 else:
                     self.normal_fps += 1
+
 
             self.capture.truncate(0)
 
@@ -101,16 +103,16 @@ class FlyContourTracker:
         contour_delay = time()
         while not self.closed:
 
-            if self.normal_frame == None:
-                continue
-
-            if self.base_frame == None:
-                self.base_frame = self.normal_frame.copy()
-
             try:
+                if self.normal_frame == None:
+                    continue
+
+                if self.base_frame == None:
+                    self.base_frame = self.normal_frame.copy()
+                    base_gray = cv2.cvtColor(self.base_frame.copy(), cv2.COLOR_BGR2GRAY)
+
                 # Convert to Gray
                 normal_gray = cv2.cvtColor(self.normal_frame.copy(), cv2.COLOR_BGR2GRAY)
-                base_gray = cv2.cvtColor(self.base_frame.copy(), cv2.COLOR_BGR2GRAY)
 
                 # Get absolute difference of previous frame to current frame
                 difference_frame = cv2.absdiff(normal_gray, base_gray)
@@ -121,6 +123,10 @@ class FlyContourTracker:
 
                 # Locate contours
                 threshold_image, self.contours, self.hierarchy = cv2.findContours(threshold_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+                #print('contours checked')
+                #print(len(self.contours))
+
+                base_gray = normal_gray.copy()
 
                 # Contour FPS Counter
                 if config.DEBUG or config.SHOW_FPS_INDEPENDENTLY:
@@ -129,7 +135,8 @@ class FlyContourTracker:
                         contour_delay = time()
 
                         # Shows FPS data
-                        print(self.get_summary())
+                        print ('Contour FPS:', self.contour_fps)
+                        #print(self.get_summary())
 
                         # Sets fps back to zero
                         self.contour_fps = 0
@@ -137,11 +144,6 @@ class FlyContourTracker:
                     else:
                         self.contour_fps += 1
 
-
-
-
-
-                self.base_frame = self.normal_frame.copy()
             except Exception as e:
                 print ('ERROR - Contour Detection:', e)
 
@@ -201,32 +203,37 @@ class FlyContourTracker:
         while not self.closed:
             try:
 
-                if self.contours == None:
+                if self.contours == None or len(self.contours) == 0:
                     continue
 
                 # Initialize variables
-                total_allowed_contours = 0
+                #total_allowed_contours = 0
 
-
+                #print(len(self.contours))
                 if len(self.contours) != 0 and self.contours != None:
                     for contour in self.contours:
+                        if cv2.contourArea(contour) <= config.MIN_AREA:
+                            continue
+
                         x, y, w, h = cv2.boundingRect(contour)
 
                         if leftbounds < x and x < rightbounds:
-                            total_allowed_contours += 1
+                            #total_allowed_contours += 1
                             time_at_last_update = time()
+                            if config.DEBUG or config.STATE_MOTION_FOUND_INDEPENDENTLY:
+                                print ('MOTION FOUND', time())
+                                
 
                 # Calculating duration since last update
                 duration_since_last_update = time() - time_at_last_update
 
-                # If divisable by 10
+                # If divisable by 15 seconds
                 if int(duration_since_last_update) % 15 == 0 and duration_since_last_update >= 10:
                     if config.DEBUG:
                         print('It has been {} seconds'.format(duration_since_last_update))
 
                     # Step function automatically disables the tracking
                     step_motor.step()
-
 
 
                 #print('It has been {} seconds'.format(duration_since_last_update))

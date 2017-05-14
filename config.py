@@ -4,9 +4,9 @@
 SIZE_RATIO = 1
 
 # Debugging Settings
-DEBUG = True
+DEBUG = False
 SHOW_FPS_INDEPENDENTLY = True
-
+STATE_MOTION_FOUND_INDEPENDENTLY = True
 # Camera Settings
 RESOLUTION = ( int (1280 * SIZE_RATIO), int (720 * SIZE_RATIO) )
 #RESOLUTION = ( int (640 * SIZE_RATIO), int (480 * SIZE_RATIO) )
@@ -20,4 +20,4 @@ MINIMUM_THRESHOLD = 20
 # Once a "sweet spot" is found, just mutliply by a by a ratio to use for higher resolutions
 # Units are in Pixel for area of a contour
 
-MIN_AREA = 0 * SIZE_RATIO
+MIN_AREA = 5 * SIZE_RATIO
