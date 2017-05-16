@@ -17,23 +17,18 @@ class FlyContourTracker:
         # Camera Setup
         self.camera = PiCamera()
         self.camera.resolution = self.resolution
-        self.camera.framerate = 20
+        self.camera.framerate = 60
+        
         self.camera.hflip = False
         self.camera.vflip = False
 
         # Let Camera Initialize
-        #self.camera.start_preview()
         sleep(2)
 
         # Stream Setup
         self.capture = PiRGBArray(self.camera, size = self.resolution)
-        #self.stream = self.camera.capture_continuous(self.capture, format = 'bgr', use_video_port = False, burst=True)
 
         self.byteCapture = io.BytesIO()
-
-        # Create Normal Frame Thread
-        #self.normal_frame_thread = Thread(target = self.get_normal_frame, args = ())
-        #self.normal_frame_thread.daemon = True
 
         # Create Contour Thread
         self.contour_frame_thread = Thread(target = self.contour_detection, args = ())
@@ -46,7 +41,6 @@ class FlyContourTracker:
         # Create Check Motion Thread
         self.check_motion_thread = Thread(target = self.check_motion, args = (0,1280))
         self.check_motion_thread.daemon = True
-
 
         # When set to true, will close the program
         self.closed = False
@@ -65,9 +59,6 @@ class FlyContourTracker:
 
 
     def run_contour_detection(self):
-        # Start Normal Frame Thread
-        #self.normal_frame_thread.start()
-
         # Start contour Fame Thread
         self.contour_frame_thread.start()
 
@@ -82,8 +73,6 @@ class FlyContourTracker:
 
     def capturing_video(self):
         columns, rows = self.resolution
-        #self.normal_frame = np.empty((rows, columns, 3), dtype=np.uint8)
-
         fps = 0
         normal_delay = time()
 
@@ -105,53 +94,12 @@ class FlyContourTracker:
             else:
                 self.normal_fps += 1
 
-
-
-
-
-
     def normal_frame_loop(self):
-        #normal_delay = time()
 
-        #for frame in self.camera.capture_continuous(self.byteCapture, format = 'bgr', use_video_port = False, burst=True):
-        #for frame in self.camera.capture_continuous(self.capture, format = 'bgr', use_video_port = False, burst=True):
-        #while not self.closed:
         try:
-            # if closed
-            #if self.closed:
-            #    return
-
-            #columns, rows = self.resolution
-
-            #self.normal_frame = frame.array
-            #self.normal_frame = np.fromstring(frame.getvalue(), dtype=np.uint8).reshape(rows, columns, 3)
-
-
             self.camera.capture_sequence(self.capturing_video(), 'bgr', use_video_port = True)
-
-
-        finally:
-
-        #    # FPS Counter
-        #    if config.DEBUG or config.SHOW_FPS_INDEPENDENTLY:
-        #        if time() - normal_delay >= 1:
-        #            self.normal_fps += 1
-        #            normal_delay = time()
-        #            print('Normal FPS:', self.normal_fps)
-        #            self.normal_fps = 0
-        #        else:
-        #            self.normal_fps += 1
-
-        #    #self.byteCapture.truncate(0)
-        #    #self.byteCapture.seek(0)
-
-        #    self.capture.seek(0)
-        #    self.capture.truncate(0)
-            pass
-
-
-
-
+        except Exception as e:
+            print ('ERROR - normal_frame_loop:', e)
 
     def contour_detection(self):
 
@@ -202,9 +150,6 @@ class FlyContourTracker:
             except Exception as e:
                 print ('ERROR - Contour Detection:', e)
 
-
-
-
     def show_frame(self):
 
         while not self.closed:
@@ -254,7 +199,6 @@ class FlyContourTracker:
         while not self.closed:
             try:
 
-
                 if self.contours != None and len(self.contours) != 0:
                     same_contours = False
                     if len(old_contours) == range(len(self.contours)):
@@ -298,8 +242,3 @@ class FlyContourTracker:
 
             except Exception as e:
                 print ('ERROR Check motion:', e)
-
-    def get_summary(self):
-        return 'Normal Frame Processing FPS: {}, Contour Processing FPS: {}'.format(self.normal_fps, self.contour_fps)
-    def is_alive(self):
-        return not self.closed
