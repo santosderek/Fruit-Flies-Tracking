@@ -1,8 +1,10 @@
 from picamera.array import PiRGBArray
-from picamera import PiCamera
+from picamera import PiCamera, BufferIO
 from threading import Thread
 from time import sleep, time
 import cv2
+import io
+import numpy as np
 
 import config
 import motor
@@ -19,11 +21,14 @@ class FlyContourTracker:
         self.camera.vflip = False
 
         # Let Camera Initialize
+        #self.camera.start_preview()
         sleep(2)
 
         # Stream Setup
         self.capture = PiRGBArray(self.camera, size = self.resolution)
-        self.stream = self.camera.capture_continuous(self.capture, format = 'bgr', use_video_port = True)
+        #self.stream = self.camera.capture_continuous(self.capture, format = 'bgr', use_video_port = False, burst=True)
+
+        self.byteCapture = io.BytesIO()
 
         # Create Normal Frame Thread
         #self.normal_frame_thread = Thread(target = self.get_normal_frame, args = ())
@@ -69,33 +74,82 @@ class FlyContourTracker:
         self.check_motion_thread.start()
 
         # When in debug mode, it will show the developer each contour frame
-        if config.DEBUG:
+        if config.DEBUG or config.SHOW_VIDEO_INDEPENDENTLY:
             self.show_frame_thread.start()
 
         return self
 
-    def normal_frame_loop(self):
+    def capturing_video(self):
+        columns, rows = self.resolution
+        #self.normal_frame = np.empty((rows, columns, 3), dtype=np.uint8)
+
+        fps = 0
         normal_delay = time()
 
-        for frame in self.stream:
+        while not self.closed:
 
+            # Returns a generator
+            yield self.byteCapture
+            self.byteCapture.seek(0)
+            self.normal_frame = np.fromstring(self.byteCapture.getvalue(), dtype=np.uint8).reshape(rows,columns,3)
+            self.byteCapture.seek(0)
+            self.byteCapture.truncate(0)
+
+            if time() - normal_delay >= 1:
+                self.normal_fps += 1
+                normal_delay = time()
+                print('Normal FPS:', self.normal_fps)
+                self.normal_fps = 0
+            else:
+                self.normal_fps += 1
+
+
+
+
+
+
+    def normal_frame_loop(self):
+        #normal_delay = time()
+
+        #for frame in self.camera.capture_continuous(self.byteCapture, format = 'bgr', use_video_port = False, burst=True):
+        #for frame in self.camera.capture_continuous(self.capture, format = 'bgr', use_video_port = False, burst=True):
+        #while not self.closed:
+        try:
             # if closed
-            if self.closed:
-                return
+            #if self.closed:
+            #    return
 
-            self.normal_frame = frame.array
+            #columns, rows = self.resolution
 
-            # FPS Counter
-            if config.DEBUG or config.SHOW_FPS_INDEPENDENTLY:
-                if time() - normal_delay >= 1:
-                    normal_delay = time()
-                    print('Normal FPS:', self.normal_fps)
-                    self.normal_fps = 0
-                else:
-                    self.normal_fps += 1
+            #self.normal_frame = frame.array
+            #self.normal_frame = np.fromstring(frame.getvalue(), dtype=np.uint8).reshape(rows, columns, 3)
 
 
-            self.capture.truncate(0)
+            self.camera.capture_sequence(self.capturing_video(), 'bgr', use_video_port = True)
+
+
+        finally:
+
+        #    # FPS Counter
+        #    if config.DEBUG or config.SHOW_FPS_INDEPENDENTLY:
+        #        if time() - normal_delay >= 1:
+        #            self.normal_fps += 1
+        #            normal_delay = time()
+        #            print('Normal FPS:', self.normal_fps)
+        #            self.normal_fps = 0
+        #        else:
+        #            self.normal_fps += 1
+
+        #    #self.byteCapture.truncate(0)
+        #    #self.byteCapture.seek(0)
+
+        #    self.capture.seek(0)
+        #    self.capture.truncate(0)
+            pass
+
+
+
+
 
     def contour_detection(self):
 
@@ -115,7 +169,7 @@ class FlyContourTracker:
                 normal_gray = cv2.cvtColor(self.normal_frame.copy(), cv2.COLOR_BGR2GRAY)
 
                 # Get absolute difference of previous frame to current frame
-                difference_frame = cv2.absdiff(normal_gray, base_gray)
+                difference_frame = cv2.absdiff(normal_gray.copy(), base_gray)
                 difference_frame = cv2.blur(difference_frame, (10, 10))
 
                 # Apply threshold to extract contours
@@ -136,7 +190,6 @@ class FlyContourTracker:
 
                         # Shows FPS data
                         print ('Contour FPS:', self.contour_fps)
-                        #print(self.get_summary())
 
                         # Sets fps back to zero
                         self.contour_fps = 0
@@ -170,16 +223,10 @@ class FlyContourTracker:
             except Exception as e:
                 print ('ERROR - Show Frame:', e)
 
-    def get_normal_frame(self):
-        return self.normal_frame.copy()
-
     def get_contour_frame(self):
 
-        #contour_frame = self.normal_frame.copy()
-        contour_frame = None
+        contour_frame = cv2.drawContours(self.normal_frame.copy(), self.contours, -1, (128, 255, 0), 3)
 
-        for contour in self.contours:
-            contour_frame = cv2.drawContours(self.normal_frame.copy(), contour, -1, (128, 255, 0), 3)
         if contour_frame != None:
             return contour_frame
         else:
@@ -200,16 +247,17 @@ class FlyContourTracker:
         duration_since_last_update = 0
         step_motor = motor.Motor()
 
+        # old_contours prevents the program from processing the same contours over and overagain
+        old_contours = None
         while not self.closed:
             try:
 
-                if self.contours != None and len(self.contours) != 0:
 
+                if self.contours != None and len(self.contours) != 0 and old_contours != self.contours:
 
                     # Initialize variables
                     #total_allowed_contours = 0
 
-                    #print(len(self.contours))
                     if len(self.contours) != 0 and self.contours != None:
                         for contour in self.contours:
                             if cv2.contourArea(contour) <= config.MIN_AREA:
@@ -238,7 +286,8 @@ class FlyContourTracker:
                 #print('It has been {} seconds'.format(duration_since_last_update))
 
                 #TODO: Need to add a start and end to each "session"
-
+                if self.contours != None:
+                    old_contours = self.contours.copy()
 
             except Exception as e:
                 print ('ERROR Check motion:', e)
