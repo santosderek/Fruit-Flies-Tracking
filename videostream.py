@@ -13,6 +13,7 @@ class FlyContourTracker:
     def __init__(self):
         # Initialize common variables
         self.resolution = (1280, 720)
+
         # Camera Setup
         self.camera = PiCamera()
         self.camera.resolution = self.resolution
@@ -98,7 +99,8 @@ class FlyContourTracker:
             if time() - normal_delay >= 1:
                 self.normal_fps += 1
                 normal_delay = time()
-                print('Normal FPS:', self.normal_fps)
+                if config.DEBUG or config.SHOW_FPS_INDEPENDENTLY:
+                    print('Normal FPS:', self.normal_fps)
                 self.normal_fps = 0
             else:
                 self.normal_fps += 1
