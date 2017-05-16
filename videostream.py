@@ -253,23 +253,28 @@ class FlyContourTracker:
             try:
 
 
-                if self.contours != None and len(self.contours) != 0 and old_contours != self.contours:
+                if self.contours != None and len(self.contours) != 0:
+                    same_contours = False
+                    if len(old_contours) == range(len(self.contours)):
+                        for i in len(old_contours):
+                            if self.contours[i] == old_contours[i]:
+                                same_contours = True
 
-                    # Initialize variables
-                    #total_allowed_contours = 0
+                        if same_contours:
+                            continue
 
-                    if len(self.contours) != 0 and self.contours != None:
-                        for contour in self.contours:
-                            if cv2.contourArea(contour) <= config.MIN_AREA:
-                                continue
 
-                            x, y, w, h = cv2.boundingRect(contour)
+                    for contour in self.contours:
+                        if cv2.contourArea(contour) <= config.MIN_AREA:
+                            continue
 
-                            if leftbounds < x and x < rightbounds:
-                                #total_allowed_contours += 1
-                                time_at_last_update = time()
-                                if config.DEBUG or config.STATE_MOTION_FOUND_INDEPENDENTLY:
-                                    print ('MOTION FOUND', time())
+                        x, y, w, h = cv2.boundingRect(contour)
+
+                        if leftbounds < x and x < rightbounds:
+                            #total_allowed_contours += 1
+                            time_at_last_update = time()
+                            if config.DEBUG or config.STATE_MOTION_FOUND_INDEPENDENTLY:
+                                print ('MOTION FOUND', time())
 
 
                 # Calculating duration since last update
