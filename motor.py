@@ -8,8 +8,10 @@ class Motor:
 
         def __init__(self):
                 self.hat = Adafruit_MotorHAT(addr = 0x60)
-                self.stepper = self.hat.getStepper(1000,1)
-                self.stepper.setSpeed(10000)
+                self.stepper = self.hat.getStepper(200, 1) # 200 Steps, port #1
+                self.stepper.setSpeed(300) # 30 RPM
+
+                self.is_shaking = False
 
         def release_motors(self):
                 self.hat.getMotor(1).run(Adafruit_MotorHAT.RELEASE)
@@ -22,7 +24,11 @@ class Motor:
 
         def step(self):
                 self.turnOffMotors()
-                self.stepper.step(400, Adafruit_MotorHAT.BACKWARD, Adafruit_MotorHAT.DOUBLE)
+                self.is_shaking = True
+                # 4 seconds
+                self.stepper.step(400, Adafruit_MotorHAT.BACKWARD, Adafruit_MotorHAT.SINGLE)
+                self.is_shaking = False
+
 
 if __name__ == '__main__':
         myMotor = Motor()

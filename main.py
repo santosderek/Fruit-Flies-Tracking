@@ -10,6 +10,9 @@ def main():
     # This function serves as the 'mainloop' for the normal frames
     video.normal_frame_loop()
 
+    #while not video.closed:
+    #    pass
+
 
 
 

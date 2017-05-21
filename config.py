@@ -5,11 +5,21 @@ SIZE_RATIO = 1
 
 # Debugging Settings
 DEBUG = False
-SHOW_FPS_INDEPENDENTLY = True
-STATE_MOTION_FOUND_INDEPENDENTLY = True
+# Show ALL fps
+SHOW_FPS_INDEPENDENTLY = False
+# Show Contour Tracking FPS by vile name
+SHOW_CONTOUR_FPS_INDEPENDENTLY = True
+# Show Normal Frame Grabing fps
+SHOW_NORMAL_FPS_INDEPENDENTLY = False
+# Show Normal to Grayscale conversion rate fps
+SHOW_N2G_FPS_INDEPENDENTLY = False
+# Show if Motion was found and time
+STATE_MOTION_FOUND_INDEPENDENTLY = False
+# Show video feed
+SHOW_VIDEO_INDEPENDENTLY = True
+
 # Camera Settings
 RESOLUTION = ( int (1280 * SIZE_RATIO), int (720 * SIZE_RATIO) )
-#RESOLUTION = ( int (640 * SIZE_RATIO), int (480 * SIZE_RATIO) )
 FRAMERATE = 60
 
 # Tracking Settings
