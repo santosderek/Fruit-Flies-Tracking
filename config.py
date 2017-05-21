@@ -8,13 +8,13 @@ DEBUG = False
 # Show ALL fps
 SHOW_FPS_INDEPENDENTLY = False
 # Show Contour Tracking FPS by vile name
-SHOW_CONTOUR_FPS_INDEPENDENTLY = True
+SHOW_CONTOUR_FPS_INDEPENDENTLY = False
 # Show Normal Frame Grabing fps
 SHOW_NORMAL_FPS_INDEPENDENTLY = False
 # Show Normal to Grayscale conversion rate fps
 SHOW_N2G_FPS_INDEPENDENTLY = False
 # Show if Motion was found and time
-STATE_MOTION_FOUND_INDEPENDENTLY = False
+STATE_MOTION_FOUND_INDEPENDENTLY = True
 # Show video feed
 SHOW_VIDEO_INDEPENDENTLY = True
 

@@ -235,27 +235,32 @@ class FlyContourTracker:
                 _, threshold_image = cv2.threshold(blured_frame, config.MINIMUM_THRESHOLD, 255, cv2.THRESH_BINARY)
                 _, contours, hierarchy = cv2.findContours(threshold_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
+                # If any contours at all
                 if contours != None and len(contours) != 0:
 
+                    #NOTE: left and rightbounds stuff is redundant now that the frame is that bounds
+                    #for contour in contours:
+                    #    # If contour is not within the range desired, skip the contour
+                    #    # AND if there already has been motion found then skip the rest
+                    #    if cv2.contourArea(contour) <= config.MIN_AREA and motion_found:
+                    #        continue
+
+                    #    # Get the dimension of the bounding rectangle
+                    #    x, y, w, h = cv2.boundingRect(contour)
+
+                    #    # Gets the middle x corrdinate of the rectangle
+                    #    middle_of_contour = x + (w/2)
+
+                    #    # If motion found:
+                    #    if leftbounds < middle_of_contour and middle_of_contour < rightbounds:
+                    time_at_last_update = time()
+                    motion_found = True
+                    if config.DEBUG or config.STATE_MOTION_FOUND_INDEPENDENTLY:
+                        print (name, 'Motion Found:', time())
+
+                # if no contours
+                else:
                     motion_found = False
-                    for contour in contours:
-                        # If contour is not within the range desired, skip the contour
-                        # AND if there already has been motion found then skip the rest
-                        if cv2.contourArea(contour) <= config.MIN_AREA and motion_found:
-                            continue
-
-                        # Get the dimension of the bounding rectangle
-                        x, y, w, h = cv2.boundingRect(contour)
-
-                        # Gets the middle x corrdinate of the rectangle
-                        middle_of_contour = x + (w/2)
-
-                        # If motion found:
-                        if leftbounds < middle_of_contour and middle_of_contour < rightbounds:
-                            time_at_last_update = time()
-                            motion_found = True
-                            if config.DEBUG or config.STATE_MOTION_FOUND_INDEPENDENTLY:
-                                print (name, 'Motion Found:', time())
 
                 # Calculating duration since last update
                 duration_since_last_update = time() - time_at_last_update
@@ -271,6 +276,7 @@ class FlyContourTracker:
                         while (self.step_motor.is_shaking):
                             sleep(1)
                     else:
+                        print (name, ' has started motor...')
                         self.step_motor.step()
 
 
