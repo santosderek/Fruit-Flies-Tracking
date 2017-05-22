@@ -18,7 +18,6 @@ class FlyContourTracker:
         self.camera = PiCamera()
         self.camera.resolution = self.resolution
         self.camera.framerate = framerate
-
         self.camera.hflip = False
         self.camera.vflip = False
 
@@ -41,13 +40,46 @@ class FlyContourTracker:
         self.normal_to_gray_thread = Thread(target = self.normal_to_gray_constant_conversion, args = ())
         self.normal_to_gray_thread.daemon = True
 
-        # Create Check Motion Thread
-        self.check_motion_thread_vile_1 = Thread(target = self.contour_detection, args = ('Vile_1', 0, 640))
-        self.check_motion_thread_vile_1.daemon = True
 
-        # Create Check Motion Thread for vile 2
-        self.check_motion_thread_vile_2 = Thread(target = self.contour_detection, args = ('Vile_2', 1280/2, 1280))
-        self.check_motion_thread_vile_2.daemon = True
+
+        ## Create Check Motion Thread for vile 1
+        #self.check_motion_thread_vile_1 = Thread(target = self.contour_detection, args = ('Vile_1', 0, 640))
+        #self.check_motion_thread_vile_1.daemon = True
+
+        ## Create Check Motion Thread for vile 2
+        #self.check_motion_thread_vile_2 = Thread(target = self.contour_detection, args = ('Vile_2', 1280/2, 1280))
+        #self.check_motion_thread_vile_2.daemon = True
+
+        ## Create Check Motion Thread for vile 3
+        #self.check_motion_thread_vile_3 = Thread(target = self.contour_detection, args = ('Vile_3', 0, 640))
+        #self.check_motion_thread_vile_3.daemon = True
+
+        ## Create Check Motion Thread for vile 4
+        #self.check_motion_thread_vile_4 = Thread(target = self.contour_detection, args = ('Vile_4', 1280/2, 1280))
+        #self.check_motion_thread_vile_4.daemon = True
+
+
+
+        self.thread_list = []
+        amount_of_threads = 4
+
+        start = 0
+        width = self.resolution[0] / amount_of_threads
+        end = 0 + width
+
+
+        for count in range(amount_of_threads):
+
+            if count < amount_of_threads - 1:
+                self.thread_list.append(Thread(target = self.contour_detection, args = ('Vile_{}'.format(count + 1), start, end)))
+            else:
+                self.thread_list.append(Thread(target = self.contour_detection, args = ('Vile_{}'.format(count + 1), start, self.resolution[0])))
+
+            start += width
+            end += width
+
+
+        print ('THREAD LIST:', len(self.thread_list))
 
         # Create Show Video for vile 2
         self.show_video_thread = Thread(target = self.show_frame, args = ())
@@ -55,8 +87,6 @@ class FlyContourTracker:
 
         # When set to true, will close the program
         self.closed = False
-
-
 
         # Contours
         self.contours = None
@@ -78,8 +108,15 @@ class FlyContourTracker:
         self.normal_to_gray_thread.start()
 
         # Start check motion in a different thread
-        self.check_motion_thread_vile_1.start()
-        self.check_motion_thread_vile_2.start()
+        #self.check_motion_thread_vile_1.start()
+        #self.check_motion_thread_vile_2.start()
+        #self.check_motion_thread_vile_3.start()
+        #self.check_motion_thread_vile_4.start()
+
+
+        for thread in self.thread_list:
+            thread.start()
+
         if config.DEBUG or config.SHOW_VIDEO_INDEPENDENTLY:
             self.show_video_thread.start()
 
@@ -183,14 +220,16 @@ class FlyContourTracker:
                     continue
                 if self.vile_2_frame is None:
                     continue
-                #if self.vile_3_frame is None:
-                #    continue
-                #if self.vile_4_frame is None:
-                #    continue
+                if self.vile_3_frame is None:
+                    continue
+                if self.vile_4_frame is None:
+                    continue
+
                 cv2.imshow('Vile_1', self.vile_1_frame)
                 cv2.imshow('Vile_2', self.vile_2_frame)
-                #cv2.imshow('Vile_3', self.vile_3_frame)
-                #cv2.imshow('Vile_4', self.vile_4_frame)
+                cv2.imshow('Vile_3', self.vile_3_frame)
+                cv2.imshow('Vile_4', self.vile_4_frame)
+
 
                 if cv2.waitKey(1) == ord('q'):
                     cv2.destroyAllWindows()
@@ -235,32 +274,24 @@ class FlyContourTracker:
                 _, threshold_image = cv2.threshold(blured_frame, config.MINIMUM_THRESHOLD, 255, cv2.THRESH_BINARY)
                 _, contours, hierarchy = cv2.findContours(threshold_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-                # If any contours at all
                 if contours != None and len(contours) != 0:
 
-                    #NOTE: left and rightbounds stuff is redundant now that the frame is that bounds
-                    #for contour in contours:
-                    #    # If contour is not within the range desired, skip the contour
-                    #    # AND if there already has been motion found then skip the rest
-                    #    if cv2.contourArea(contour) <= config.MIN_AREA and motion_found:
-                    #        continue
-
-                    #    # Get the dimension of the bounding rectangle
-                    #    x, y, w, h = cv2.boundingRect(contour)
-
-                    #    # Gets the middle x corrdinate of the rectangle
-                    #    middle_of_contour = x + (w/2)
-
-                    #    # If motion found:
-                    #    if leftbounds < middle_of_contour and middle_of_contour < rightbounds:
-                    time_at_last_update = time()
-                    motion_found = True
-                    if config.DEBUG or config.STATE_MOTION_FOUND_INDEPENDENTLY:
-                        print (name, 'Motion Found:', time())
-
-                # if no contours
-                else:
                     motion_found = False
+
+                    for contour in contours:
+                        contour_area = cv2.contourArea(contour)
+                        # if not allowed
+                        if contour_area < config.MIN_AREA or motion_found:
+                            continue
+                        # if allowed
+                        elif contour_area >= config.MIN_AREA:
+                            motion_found = True
+                            time_at_last_update = time()
+                            if config.DEBUG or config.STATE_MOTION_FOUND_INDEPENDENTLY:
+                                print (name, 'Motion Found:', time())
+
+                            if config.DEBUG or config.SHOW_CONTOUR_AREA:
+                                print (name, ', AREA:', contour_area)
 
                 # Calculating duration since last update
                 duration_since_last_update = time() - time_at_last_update
@@ -292,8 +323,6 @@ class FlyContourTracker:
                         self.vile_3_frame = cv2.drawContours(current_frame.copy(), contours, -1, (128,255,0), 3)
                     if name == 'Vile_4':
                         self.vile_4_frame = cv2.drawContours(current_frame.copy(), contours, -1, (128,255,0), 3)
-
-
 
             except Exception as e:
                 print (name, 'ERROR Contour Detection:', e)

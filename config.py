@@ -14,9 +14,11 @@ SHOW_NORMAL_FPS_INDEPENDENTLY = False
 # Show Normal to Grayscale conversion rate fps
 SHOW_N2G_FPS_INDEPENDENTLY = False
 # Show if Motion was found and time
-STATE_MOTION_FOUND_INDEPENDENTLY = True
+STATE_MOTION_FOUND_INDEPENDENTLY = False
 # Show video feed
 SHOW_VIDEO_INDEPENDENTLY = True
+# Show Contour Area
+SHOW_CONTOUR_AREA = False
 
 # Camera Settings
 RESOLUTION = ( int (1280 * SIZE_RATIO), int (720 * SIZE_RATIO) )
@@ -30,4 +32,4 @@ MINIMUM_THRESHOLD = 20
 # Once a "sweet spot" is found, just mutliply by a by a ratio to use for higher resolutions
 # Units are in Pixel for area of a contour
 
-MIN_AREA = 5 * SIZE_RATIO
+MIN_AREA = 100 * SIZE_RATIO
